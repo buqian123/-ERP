@@ -1,0 +1,176 @@
+{
+  "easycom": {
+  	"^u-(.*)": "@/uview-ui/components/u-$1/u-$1.vue"
+  },
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/work/index",
+      "style": {
+      	"navigationBarTitleText": "阿丁销售云"
+      }
+		},
+    {
+    	"path": "pages/tongji/index"
+    },
+    {
+    	"path": "pages/tongji/other/rankingList",
+      "style": {
+      	"navigationBarTitleText": "排行榜"
+      }
+    },
+    {
+    	"path": "pages/tongji/other/lossInfo",
+      "style": {
+      	"navigationBarTitleText": "流失分析"
+      }
+    },
+    {
+    	"path": "pages/tongji/other/introAnalyse",
+      "style": {
+      	"navigationBarTitleText": "更多分析"
+      }
+    },
+    {
+    	"path": "pages/more/index"
+    },
+    {
+    	"path": "pages/admin/index"
+    },
+    {
+    	"path": "pages/work/task/task",
+      "style": {
+      	"navigationBarTitleText": "新建任务"
+      }
+    },
+    {
+    	"path": "pages/customer/index",
+      "style": {
+      	"navigationBarTitleText": "客户"
+      }
+    },
+    {
+    	"path": "pages/customer/cusDetail",
+      "style": {
+      	"navigationBarTitleText": "客户详情"
+      }
+    },
+    {
+    	"path": "pages/customer/cusInfo",
+      "style": {
+      	"navigationBarTitleText": "客户资料"
+      }
+    },
+    {
+    	"path": "pages/customer/editCus",
+      "style": {
+      	"navigationBarTitleText": "编辑客户"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/follow/followDetail",
+      "style": {
+      	"navigationBarTitleText": "跟进详情"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/service/serivceCusInfo",
+      "style": {
+      	"navigationBarTitleText": "客户资料"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/service/serviceDetail",
+      "style": {
+      	"navigationBarTitleText": "服务单详情"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/demand/demand-detail/index",
+      "style": {
+      	"navigationBarTitleText": "需求详情"
+      }
+    },
+    {
+    	"path": "pages/demand/index",
+      "style": {
+      	"navigationBarTitleText": "需求"
+      }
+    },
+    {
+    	"path": "pages/service/index",
+      "style": {
+      	"navigationBarTitleText": "服务单"
+      }
+    },
+    {
+    	"path": "pages/introduct/index",
+      "style": {
+      	"navigationBarTitleText": "介绍人"
+      }
+    },
+    {
+    	"path": "pages/introduct/people/index",
+      "style": {
+      	"navigationBarTitleText": "介绍人"
+      }
+    },
+    {
+    	"path": "pages/introduct/company/index",
+      "style": {
+      	"navigationBarTitleText": "介绍人公司"
+      }
+    },
+    {
+    	"path": "pages/introduct/people/itr-peo-detail",
+      "style": {
+      	"navigationBarTitleText": "介绍人详情"
+      }
+    },
+    {
+    	"path": "pages/introduct/people/detail-type/follow-detail",
+      "style": {
+      	"navigationBarTitleText": "介绍人跟进详情"
+      }
+    },
+    {
+    	"path": "pages/introduct/people/detail-type/recommend/recommend-type/clue-detail",
+      "style": {
+      	"navigationBarTitleText": "线索资料"
+      }
+    }
+	],
+  "globalStyle": {
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+  	"color": "#909399",
+  	"selectedColor": "#303133",
+  	"backgroundColor": "#FFFFFF",
+  	"borderStyle": "black",
+  	"list": [{
+  			"pagePath": "pages/work/index",
+  			"iconPath": "static/tab-bar-img/icon-work.png",
+  			"selectedIconPath": "static/tab-bar-img/icon-work_b.png",
+  			"text": "工作台"
+  		},
+      {
+        "pagePath": "pages/tongji/index",
+        "iconPath": "static/tab-bar-img/icon-tongji.png",
+        "selectedIconPath": "static/tab-bar-img/icon-tongji_b.png",
+        "text": "分析"
+      },
+      {
+        "pagePath": "pages/more/index",
+        "iconPath": "static/tab-bar-img/icon-more.png",
+        "selectedIconPath": "static/tab-bar-img/icon-more_b.png",
+        "text": "更多"
+      },
+      {
+        "pagePath": "pages/admin/index",
+        "iconPath": "static/tab-bar-img/icon-admin.png",
+        "selectedIconPath": "static/tab-bar-img/icon-admin_b.png",
+        "text": "PC后台"
+      }
+  	]
+  }
+}
