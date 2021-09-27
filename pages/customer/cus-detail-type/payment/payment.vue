@@ -6,24 +6,27 @@
       <text>请在「需求」中选择具体需求，新增收退款</text>
     </view>
     <view class="pay-list">
-      <view class="payment-item">
+      <view class="payment-item" v-for="item in collectList" :key="item.id">
         <view class="payment-title flex-jsac">
-          <view class="title-tag">收款</view>
-          <view class="title">收款编号：P202109011056255369</view>
+          <view class="title-tag">{{item.distinguish == '0' ? '收款' : '退款'}}</view>
+          <view class="title ell">收款编号：{{item.id}}</view>
         </view>
-        <view class="info-text-list">收款时间：2021-09-01 10:47:46</view>
-        <view class="info-text-list">收款类型：定金</view>
-        <view class="info-text-list">结算方式：内部调账</view>
-        <view class="info-text-list">审核状态：待审核</view>
+        <view class="info-text-list">收款时间：{{item.slowTime}}</view>
+        <view class="info-text-list">收款类型：{{item.slowType}}</view>
+        <view class="info-text-list">结算方式：{{item.settlementMethod}}</view>
+        <view class="info-text-list">审核状态：{{item.isExamine == '0' ? '已审核' : '待审核'}}</view>
         <view class="info-text-list flex-jsac">
           本次收款：
-          <text class="info-text-cur">500000元</text>
+          <text class="info-text-cur">{{item.money}}元</text>
         </view>
-        <view class="info-text-list">收款备注：测试测试测试测试</view>
+        <view class="info-text-list">收款备注：{{item.remarks}}</view>
+        <view class="img-ul" v-if="item.imgUrl">
+          <image class="img" :src="subitem" v-for="(subitem, index) in item.imgUrl" :key="index"></image>
+        </view>
         <view class="pay-btn-box flex-bet">
           <view class="pay-btn-left flex-jsac">
             <image src="/static/logo.png" class="avatar"></image>
-            <text>ZhengYu收款</text>
+            <text>{{item.slowPeople}}收款</text>
           </view>
           <view class="pay-btn-right flex-jsac">
             <view class="flex-jsac">
@@ -34,12 +37,36 @@
         </view>
       </view>
     </view>
-    <view class="van-list__finished-text">已显示全部数据</view>
-    <view class="van-list__placeholder"></view>
+    <view v-if="collectList.length != 0">
+      <view class="van-list__finished-text">已显示全部数据</view>
+      <view class="van-list__placeholder"></view>
+    </view>
+    <view class="no-data" v-if="collectList.length == 0">
+      <image src="/static/no-chart.png"></image>
+      暂无跟进记录
+    </view>
   </view>
 </template>
 
 <script>
+export default {
+  data() {
+    return {
+      collectList: []
+    }
+  },
+  created() {
+    this.getCollectList()
+  },
+  methods: {
+    getCollectList() {
+      this.$u.api.getCollect({limit: 10, offset: 1}).then(res => {
+        this.collectList = res
+        console.log(this.collectList)
+      })
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -74,6 +101,7 @@
     }
 
     .pay-list {
+      margin-top: .4rem;
       .payment-item {
         width: 100%;
         padding: .293333rem;
@@ -81,6 +109,10 @@
         margin-top: .373333rem;
         background: #fff;
         border-radius: .106667rem;
+        
+        &:first-child {
+          margin-top: 0;
+        }
 
         .payment-title {
           .title-tag {
@@ -120,6 +152,22 @@
             color: #f65d48;
           }
         }
+        
+        .img-ul {
+          display: flex;
+          margin-top: .16rem;
+          
+          .img {
+            width: 1.653333rem;
+            height: 1.653333rem;
+            margin-left: .16rem;
+            border-radius: .106667rem;
+            
+            &:first-child {
+              margin-left: 0;
+            }
+          }
+        }
 
         .pay-btn-box {
           width: 100%;
@@ -153,17 +201,5 @@
         }
       }
     }
-  }
-
-  .van-list__finished-text {
-    color: #969799;
-    font-size: .373333rem;
-    line-height: 1.333333rem;
-    text-align: center;
-  }
-
-  .van-list__placeholder {
-    height: 3rem;
-    pointer-events: none;
   }
 </style>

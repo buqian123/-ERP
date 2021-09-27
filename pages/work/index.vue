@@ -43,7 +43,7 @@
       </u-collapse>
     </view>
     <!-- 雷达、任务 -->
-    <u-sticky offset-top="-90">   <!-- 吸顶，  offset-top顶部距离-->
+    <u-sticky offset-top="-90" :enable="enable">   <!-- 吸顶，  offset-top顶部距离-->
       <view style="width: 100%;background-color: #F9F9F9;">
         <view class="task">
           <!-- tab切换， name：文字 count：角标  offset ：角标位置偏移 [x,y]  taskList：tab数组  is-scroll：是否可左右拖动  show-bar：是否显示底部滑块-->
@@ -85,7 +85,7 @@
     <!-- 任务列表 -->
     <view class="tasklist" v-if="taskCurrent == 1">
       <!-- 吸顶 -->
-      <u-sticky offset-top="-10">
+      <u-sticky offset-top="-10" :enable="enable">
         <view style="background-color: #fff;">
           <view class="flex-bet">
             <view class="scroll-nav">
@@ -163,12 +163,17 @@
       return {
         // 头部分类导航
         navImg: [
-          { bgImg: 'url(/static/work-nav/bgA.png)', color: '#fff', t1: '客户', t2: '线索清晰、客户跟踪', path: '/pages/customer/index' },
-          { bgImg: 'url(/static/work-nav/bgB.png)', color: '#fff', t1: '介绍人', t2: '渠道维护、介绍人分佣', path: '/pages/introduct/index' },
-          { bgImg: 'url(/static/work-nav/bg1.png)', color: 'rgb(75, 98, 188)', t1: '需求', t2: '客户需求跟踪', path: '/pages/demand/index' },
-          { bgImg: 'url(/static/work-nav/bg2.png)', color: 'rgb(58, 120, 125)', t1: '服务单', t2: '服务协同管理', path: '/pages/service/index' },
-          { bgImg: 'url(/static/work-nav/bg3.png)', color: 'rgb(97, 114, 209)', t1: 'POS收款', t2: '支付微信、支付宝' },
-          { bgImg: 'url(/static/work-nav/bg4.png)', color: '#fd8517', t1: '添加', t2: '更多应用→' },
+          { bgImg: 'url(/static/work-nav/bgA.png)', color: '#ffffff', t1: '客户', t2: '线索清晰、客户跟踪', path: '/pages/customer/index' },
+          { bgImg: 'url(/static/work-nav/bgB.png)', color: '#ffffff', t1: '介绍人', t2: '渠道维护、介绍人分佣', path: '/pages/introduct/index' },
+          { bgImg: 'url(/static/work-nav/bg1.png)', color: '#4b62bc', t1: '需求', t2: '客户需求跟踪', path: '/pages/demand/index' },
+          { bgImg: 'url(/static/work-nav/bg2.png)', color: '#3a787d', t1: '服务单', t2: '服务协同管理', path: '/pages/service/index' },
+          { bgImg: 'url(/static/work-nav/bg3.png)', color: '#6172d1', t1: 'POS收款', t2: '支付微信、支付宝' },
+          { bgImg: 'url(/static/work-nav/bg4.png)', color: '#338854', t1: '接待登记', t2: '客户进店接待', path: '/pages/reception/index' },
+          { bgImg: 'url(/static/work-nav/bg6.png)', color: '#ca7253', t1: '素材库', t2: '客户营销素材', path: '/pages/library/material/index' },
+          { bgImg: 'url(/static/work-nav/bg7.png)', color: '#ca7253', t1: '话术库', t2: '常用语高效沟通', path: '/pages/library/script/index' },
+          { bgImg: 'url(/static/work-nav/bg8.png)', color: '#9a6844', t1: '钱包', t2: '相关费用充值', path: '/pages/money/wallet/index' },
+          { bgImg: 'url(/static/work-nav/bg9.png)', color: '#9a6844', t1: '收款管理', t2: '收款对账审核', path: '/pages/money/collect-control/index' },
+          { bgImg: 'url(/static/work-nav/add.png)', color: '#fd8517', t1: '添加', t2: '更多应用→', path: '/pages/work/addApp' },
         ],
         // 折叠面板标题样式
         collapseTitle: {
@@ -259,13 +264,20 @@
         searchPeo: '', // 搜索执行人
         popupShow: false,
         // 是否全部
-        radioSale: ''
+        radioSale: '',
+        // 控制吸顶
+        enable: true
       }
     },
     onShow() {
+      this.enable = true
+      
       // 展示第一个任务的详情内容
       var arr = this.tlist[this.tlistIndex].clist
       this.currTaskList = arr
+    },
+    onHide() {
+      this.enable = false
     },
     methods: {
       xding() {

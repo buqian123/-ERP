@@ -14,12 +14,12 @@
             <view class="cus-list-info">
               <view class="cus-name">
                 <text class="s1">跟进人：</text>
-                <text class="s2">ZhengYu</text>
+                <text class="s2">{{cusInfo.followUpPerson || '暂无'}}</text>
               </view>
               <view class="cus-status" @tap="showStatusAction = true">
                 <view class="name">客户状态</view>
                 <view class="text">
-                  <text>成单/</text>
+                  <text>{{cusStatusText}}</text>
                 </view>
               </view>
               <!-- 更改客户状态选择框 -->
@@ -37,31 +37,32 @@
       </view>
     </view>
     <view class="follow-btn-ul">
-      <view class="follow-btn-item">
-        <view class="add-follow-icon">+</view>
+      <view class="follow-btn-item" @tap="addFollow">
+        <image class="add-follow-icon" src="/static/add-plus-icon.png"></image>
         <view class="add-follow-text">添加跟进</view>
       </view>
     </view>
-    <!-- 跟进列表 -->
+    
+    <!-- 日志列表 -->
     <view class="follow-ul">
-      <view class="follow-list" v-for="(item, index) in 3" :key="index" @tap="goDetail">
+      <view class="follow-list" v-for="item in loglist" :key="item.timeId">
         <view class="fllow-info">
           <view class="time-box">
-            <view class="week">星期二</view>
-            <view class="time">2021年08月31日</view>
+            <view class="week">{{item.week}}</view>
+            <view class="time">{{item.specificDate}}</view>
           </view>
           <view class="time-ul">
-            <view class="time-list">
-              <view class="time-text">11:01:18</view>
+            <view class="time-list" v-for="subitem in item.openLogs" :key="subitem.id" @tap="goDetail(subitem.id)">
+              <view class="time-text">{{subitem.logDateTime}}</view>
               <view class="list-icon"></view>
               <view class="list-content">
                 <view class="content-icon"></view>
                 <view class="content">
                   <view>
-                    <view class="mode-name">进店接待0-10分钟 | 普通跟进</view>
-                    <view class="customer">跟进人:ZhengYu</view>
+                    <view class="mode-name">{{subitem.logTitle}}</view>
+                    <view class="customer">{{'操作人：' + subitem.openUser}}</view>
                   </view>
-                  <view class="follow-text ell">sfhhvxduhf</view>
+                  <view class="follow-text ell">{{subitem.openContent}}</view>
                 </view>
                 <view class="content-icon"></view>
               </view>
@@ -69,45 +70,92 @@
           </view>
         </view>
       </view>
-      <view class="van-list__finished-text">已显示全部数据</view>
-      <view class="van-list__placeholder"></view>
+      <view v-if="loglist.length != 0">
+        <view class="van-list__finished-text">已显示全部数据</view>
+        <view class="van-list__placeholder"></view>
+      </view>
+      <view class="no-data" v-if="loglist.length == 0">
+        <image src="/static/no-chart.png"></image>
+        暂无跟进记录
+      </view>
     </view>
   </view>
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex'
 export default {
+  computed: {
+    ...mapState({
+      cusId: state => state.customer.cusId,
+      cusInfo: state => state.customer.cusInfo,
+    })
+  },
   data() {
     return {
       showStatusAction: false,
       // 修改客户状态 操作菜单
       statuslist: [
-        { label: '线索', value: 1 }, { label: '意向', value: 2 }, { label: '成单', value: 3 },
-        { label: '支付', value: 4 }, { label: '复购', value: 5 }, { label: '联购', value: 6 }, 
-        { label: '丢单', value: 7 }, { label: '无效', value: 8 }
+        { label: '线索', value: 0 }, { label: '意向', value: 1 }, { label: '成单', value: 2 },
+        { label: '支付', value: 3 }, { label: '复购', value: 4 }, { label: '联购', value: 5 }, 
+        { label: '丢单', value: 6 }, { label: '无效', value: 7 }
       ],
       // 标记无效弹框
       invalid: {
         show: false,
         content: '确认标记无效么？'
-      }
+      },
+
+      cusStatusText: '',
+      loglist: []
     }
   },
+  mounted() {
+    this.getFollowInfo()
+    this.getFollowLog()
+  },
   methods: {
+    ...mapMutations(['setFollowId']),
+    getFollowInfo() {
+      let arr = this.statuslist.filter(item => {
+        return item.value == this.cusInfo.status
+      })
+      this.cusStatusText = arr[0].label
+    },
+    getFollowLog() {
+      let data = {
+        fromId: '|' + this.cusId + '|',
+        type: 'FOLLOW',
+        limit: 5,
+        page: 1
+      }
+      this.$u.api.getAllLog(data).then(res => {
+        this.loglist = res.filter(item => {
+          return item.openLogs.length != 0
+        })
+      })
+    },
+    addFollow() {
+      uni.navigateTo({
+        url: '/pages/customer/cus-detail-type/follow/addFollow'
+      })
+    },
     // 改变客户状态
-    changeStatus(index) {
-      console.log(index);
+    changeStatus(data) {
+      this.cusStatusText = data[0].label
     },
     // 确认标记无效
     handleInvalid() {
-      console.log('确认');
+      this.cusStatusText = '无效'
     },
     // 查看跟进详情
-    goDetail() {
+    goDetail(id) {
+      this.setFollowId(id)
       uni.navigateTo({
         url: '/pages/customer/cus-detail-type/follow/followDetail'
       })
-    }
+    },
+    
   }
 }
 </script>
@@ -259,7 +307,7 @@ export default {
 
         .add-follow-text {
           height: .906667rem;
-          line-height: .933333rem;
+          line-height: .906667rem;
         }
       }
     }
@@ -357,17 +405,5 @@ export default {
         }
       }
     }
-  }
-
-  .van-list__finished-text {
-    color: #969799;
-    font-size: .373333rem;
-    line-height: 1.333333rem;
-    text-align: center;
-  }
-
-  .van-list__placeholder {
-    height: 3rem;
-    pointer-events: none;
   }
 </style>

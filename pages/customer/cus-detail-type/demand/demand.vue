@@ -2,39 +2,51 @@
   <!-- 需求 -->
   <view class="sale-box">
     <view class="btn-ul">
-      <view class="btn-item">
-        <view class="add-icon flex-cen">+</view>
+      <view class="btn-item" @tap="addDemand">
+        <image class="add-icon flex-cen" src="/static/add-plus-icon.png"></image>
         <view class="add-text">添加需求</view>
       </view>
     </view>
     <view class="sale-list">
-      <view class="sale-item" v-for="(item, index) in 2" :key="index" @tap="goDetail">
+      <view class="sale-item" v-for="(item, index) in demandList" :key="item.id" @tap="goDetail(item)">
         <view class="sale-top">
           <view class="content-item">
-            <view class="scale-border">
-              <view class="orange">示例(请去PC端修改)</view>
+            <view class="scale-border" v-if="item.demandType">
+              <view class="orange">{{item.demandType}}</view>
               <view class="ob border"></view>
             </view>
-            <view class="scale-border">
-              <view class="orange">零售</view>
+            <view class="scale-border" v-if="item.demandName">
+              <view class="orange">{{item.demandName}}</view>
               <view class="ob border"></view>
             </view>
-            <view class="scale-border">
-              <view class="orange">D类需求</view>
+            <view class="scale-border" v-if="item.majorLevel">
+              <view class="orange">{{item.majorLevel + '类需求'}}</view>
               <view class="ob border"></view>
             </view>
-            <view class="scale-border">
+            <view class="scale-border" v-if="item.followState == 0">
+              <view class="green">跟进中</view>
+              <view class="gb border"></view>
+            </view>
+            <view class="scale-border" v-if="item.followState == 1">
               <view class="green">已签约</view>
+              <view class="gb border"></view>
+            </view>
+            <view class="scale-border" v-if="item.followState == 2">
+              <view class="green">已交付</view>
+              <view class="gb border"></view>
+            </view>
+            <view class="scale-border" v-if="item.followState == 3">
+              <view class="green">已流失</view>
               <view class="gb border"></view>
             </view>
           </view>
           <view class="content-item">
-            <view class="scale-border">
-              <view class="zi">ZhengYu跟进</view>
+            <view class="scale-border" v-if="item.demandFollowPeople">
+              <view class="zi">{{item.demandFollowPeople + '跟进'}}</view>
               <view class="zb border"></view>
             </view>
-            <view class="scale-border">
-              <view class="zi">张三介绍</view>
+            <view class="scale-border" v-if="item.introducerId">
+              <view class="zi">{{item.introducerId}}</view>
               <view class="zb border"></view>
             </view>
           </view>
@@ -66,21 +78,54 @@
           </view>
         </view>
       </view>
-      <view class="van-list__finished-text">已显示全部数据</view>
-      <view class="van-list__placeholder"></view>
+      <view v-if="demandList.length != 0">
+        <view class="van-list__finished-text">已显示全部数据</view>
+        <view class="van-list__placeholder"></view>
+      </view>
+      <view class="no-data" v-if="demandList.length == 0">
+        <image src="/static/no-chart.png"></image>
+        暂无跟进记录
+      </view>
     </view>
   </view>
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex'
 export default {
+  computed: {
+    ...mapState({
+      cusId: state => state.customer.cusId,
+      cusInfo: state => state.customer.cusInfo,
+    })
+  },
   data() {
     return {
-      
+      demandList: [],
     }
   },
+  created() {
+    this.getDemandList()
+  },
   methods: {
-    goDetail() {
+    ...mapMutations(['setDemandId']),
+    getDemandList() {
+      let data = {
+        limit: 10,
+        page: 1,
+        customerId: this.cusId
+      }
+      this.$u.api.getCusDemand(data).then(res => {
+        this.demandList = res.records
+      })
+    },
+    addDemand() {
+      uni.navigateTo({
+        url: '/pages/customer/cus-detail-type/demand/addDemand/index'
+      })
+    },
+    goDetail(item) {
+      this.setDemandId(item.id)
       uni.navigateTo({
         url: '/pages/customer/cus-detail-type/demand/demand-detail/index'
       })
@@ -269,17 +314,5 @@ export default {
         }
       }
     }
-  }
-
-  .van-list__finished-text {
-    color: #969799;
-    font-size: .373333rem;
-    line-height: 1.333333rem;
-    text-align: center;
-  }
-
-  .van-list__placeholder {
-    height: 3rem;
-    pointer-events: none;
   }
 </style>

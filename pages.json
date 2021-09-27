@@ -10,6 +10,12 @@
       }
 		},
     {
+    	"path": "pages/work/addApp",
+      "style": {
+      	"navigationBarTitleText": "工作台"
+      }
+    },
+    {
     	"path": "pages/tongji/index"
     },
     {
@@ -49,6 +55,48 @@
       }
     },
     {
+    	"path": "pages/customer/addCustomer",
+      "style": {
+      	"navigationBarTitleText": "新建客户"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/follow/addFollow",
+      "style": {
+      	"navigationBarTitleText": "添加跟进"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/demand/addDemand/index",
+      "style": {
+      	"navigationBarTitleText": "添加需求"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/demand/addDemand/cusImpotInfo/list",
+      "style": {
+      	"navigationBarTitleText": "客户关键信息"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/demand/addDemand/cusImpotInfo/addList",
+      "style": {
+      	"navigationBarTitleText": "新建客户关键信息"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/demand/addDemand/choose-introductor",
+      "style": {
+      	"navigationBarTitleText": "选择介绍人"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/payment/addCollect",
+      "style": {
+      	"navigationBarTitleText": "新增收款"
+      }
+    },
+    {
     	"path": "pages/customer/cusDetail",
       "style": {
       	"navigationBarTitleText": "客户详情"
@@ -73,7 +121,7 @@
       }
     },
     {
-    	"path": "pages/customer/cus-detail-type/service/serivceCusInfo",
+    	"path": "pages/customer/cus-detail-type/service/serviceCusInfo",
       "style": {
       	"navigationBarTitleText": "客户资料"
       }
@@ -85,9 +133,27 @@
       }
     },
     {
+    	"path": "pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/service/addService",
+      "style": {
+      	"navigationBarTitleText": "新增服务单"
+      }
+    },
+    {
     	"path": "pages/customer/cus-detail-type/demand/demand-detail/index",
       "style": {
       	"navigationBarTitleText": "需求详情"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/signing/addSign",
+      "style": {
+      	"navigationBarTitleText": "新建签单"
+      }
+    },
+    {
+    	"path": "pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/signing/editSign",
+      "style": {
+      	"navigationBarTitleText": "编辑签单"
       }
     },
     {
@@ -136,6 +202,42 @@
     	"path": "pages/introduct/people/detail-type/recommend/recommend-type/clue-detail",
       "style": {
       	"navigationBarTitleText": "线索资料"
+      }
+    },
+    {
+    	"path": "pages/reception/index",
+      "style": {
+      	"navigationBarTitleText": "接待登记"
+      }
+    },
+    {
+    	"path": "pages/reception/reception-record",
+      "style": {
+      	"navigationBarTitleText": "接待记录"
+      }
+    },
+    {
+    	"path": "pages/library/material/index",
+      "style": {
+      	"navigationBarTitleText": "素材库"
+      }
+    },
+    {
+    	"path": "pages/library/script/index",
+      "style": {
+      	"navigationBarTitleText": "话书库"
+      }
+    },
+    {
+    	"path": "pages/money/collect-control/index",
+      "style": {
+      	"navigationBarTitleText": "收款管理"
+      }
+    },
+    {
+    	"path": "pages/money/wallet/index",
+      "style": {
+      	"navigationBarTitleText": "钱包"
       }
     }
 	],

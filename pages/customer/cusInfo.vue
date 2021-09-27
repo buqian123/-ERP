@@ -1,7 +1,7 @@
 <template>
   <view class="wrap">
     <view class="header flex-bet">
-      <view class="header-name">AnDragon</view>
+      <view class="header-name">{{cusInfo.userName}}</view>
       <view class="scale-border" @tap="goEditCus">
         <view class="text">编辑资料</view>
         <view class="border"></view>
@@ -9,42 +9,29 @@
     </view>
     <view class="info-item">
       <view class="info-item-left">微信昵称：</view>
-      <view class="info-item-right">AnDragon</view>
+      <view class="info-item-right">{{cusInfo.wechatName}}</view>
     </view>
     <view class="info-item">
       <view class="info-item-left">联系方式：</view>
-      <view class="info-item-right">13577779999</view>
+      <view class="info-item-right">
+        <view v-for="item in cusInfo.mobile">{{item.remarks + '-' + item.mobile}}</view>
+      </view>
     </view>
     <view class="info-item">
       <view class="info-item-left">客户来源：</view>
-      <view class="info-item-right">自然进店</view>
+      <view class="info-item-right">{{cusInfo.customerSource}}</view>
     </view>
     <view class="info-item">
       <view class="info-item-left">省市区：</view>
-      <view class="info-item-right">湖南省长沙市岳麓区</view>
+      <view class="info-item-right">{{cusInfo.address}}</view>
     </view>
     <view class="line"></view>
     <view class="info-header">关键信息</view>
     <view class="imp-item">
-      <view class="info-item">
-        <view class="info-item-left">客户户型：</view>
-        <view class="info-item-right">三室</view>
-      </view>
-      <view class="info-item">
-        <view class="info-item-left">详细地址：</view>
-        <view class="info-item-right">杭州解百城市奥莱A座小区A8幢1单元1011室</view>
-      </view>
-      <view class="info-item">
-        <view class="info-item-left">房屋面积：</view>
-        <view class="info-item-right">200平米</view>
-      </view>
-      <view class="info-item">
-        <view class="info-item-left">装修阶段：</view>
-        <view class="info-item-right">水电</view>
-      </view>
-      <view class="info-item">
-        <view class="info-item-left">装修风格：</view>
-        <view class="info-item-right">中式</view>
+      <view class="info-item" v-for="item in cusInfo.keyMessages">
+        <view class="info-item-left">{{item.productName + '---'}}</view>
+        <view class="info-item-right">{{item.productType + '---'}}</view>
+        <view class="info-item-right">{{'地址:' + item.address}}</view>
       </view>
       <view class="line" style="margin-top: 12px;"></view>
     </view>
@@ -52,32 +39,47 @@
     <view>
       <view class="info-item">
         <view class="info-item-left">性别：</view>
-        <view class="info-item-right">男</view>
+        <view class="info-item-right">{{cusInfo.sex}}</view>
       </view>
       <view class="info-item">
         <view class="info-item-left">年龄：</view>
-        <view class="info-item-right">999</view>
+        <view class="info-item-right">{{cusInfo.age}}</view>
       </view>
       <view class="info-item">
         <view class="info-item-left">生日：</view>
-        <view class="info-item-right">13/1</view>
+        <view class="info-item-right">{{cusInfo.birthday}}</view>
       </view>
       <view class="info-item">
         <view class="info-item-left">用户简介：</view>
-        <view class="info-item-right">帅的一批</view>
+        <view class="info-item-right">{{cusInfo.introduce}}</view>
       </view>
     </view>
   </view>
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex'
 export default {
+  computed: {
+    ...mapState({
+      cusInfo: state => state.customer.cusInfo
+    })
+  },
   data() {
     return {
-      
+
     }
   },
+  onLoad() {
+    // this.getCusInfo()
+  },
   methods: {
+    getCusInfo() {
+      // this.$u.api.selectCusInfo({id: this.cusId}).then(res => {
+      //   this.cusInfo = res
+      //   console.log(this.cusInfo);
+      // })
+    },
     goEditCus() {
       uni.navigateTo({
         url: '/pages/customer/editCus'

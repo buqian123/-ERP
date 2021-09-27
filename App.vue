@@ -1,14 +1,50 @@
 <script>
+  import { mapState, mapMutations } from 'vuex'
 	export default {
+    computed: {
+      ...mapState({
+        cusId: state => state.customer.cusId,
+        demandId: state => state.customer.demandId,
+      })
+    },
 		onLaunch: function() {
+      
 			// console.log('App Launch')
+      
+      // this.$u.api.login({openId: '123'}).then(res => {
+      //   uni.setStorageSync('token', res)
+      // })
+      // uni.request({
+      //   url: 'http://along.vaiwan.com/api/login',
+      //   method: 'POST',
+      //   data: {
+      //     userId: '1',
+      //     openId: '123'
+      //   },
+      //   success: res => {
+      //     console.log(res);
+      //     uni.setStorageSync('token', res.data)
+      //   }
+      // })
+      
 		},
 		onShow: function() {
 			// console.log('App Show')
 		},
 		onHide: function() {
 			// console.log('App Hide')
-		}
+		},
+    created() {
+      //在页面加载时读取sessionStorage里的状态信息
+      if (sessionStorage.getItem("store") ) {
+      this.$store.replaceState(Object.assign({}, this.$store.state,JSON.parse(sessionStorage.getItem("store"))))
+      }
+      
+      //在页面刷新时将vuex里的信息保存到sessionStorage里
+      window.addEventListener("beforeunload",()=>{
+      sessionStorage.setItem("store",JSON.stringify(this.$store.state))
+      })
+    }
 	}
 </script>
 
@@ -16,6 +52,19 @@
 	/*每个页面公共css */
   @import "uview-ui/index.scss";
   @import "common/global.scss";
+  input {
+    outline: none;
+    border: none;
+    font-size: .4rem;
+    background-color: #fff;
+    line-height: .56rem;
+    color: #262626;
+    padding-left: 0;
+    background-color: rgb(255, 255, 255);
+  }
+  page {
+    height: 100%;
+  }
   .container {
    // width: 100%;
    // padding: 0 13px;
@@ -188,5 +237,75 @@
   .van-list__placeholder {
     height: 0;
     pointer-events: none;
+  }
+  .line-ver-gradint {
+    height: 0.28rem;
+    width: 100%;
+    background: linear-gradient(180deg,hsla(0,0%,100%,.76),hsla(0,0%,100%,0));
+  }
+  .u-field {
+    padding: .426667rem .266667rem;
+    font-size: .373333rem;
+    line-height: .64rem;
+    background-color: #fff;
+    display: flex;
+    width: 100%;
+  
+    ::v-deep .u-field-inner {
+      width: 100%;
+    }
+    ::v-deep .u-label  {
+      margin-left: .16rem;
+      font-size: .426667rem;
+      font-weight: 500;
+      line-height: .613333rem;
+      color: #262626;
+      width: auto !important;
+      text-align: left;
+      word-wrap: break-word;
+      margin-right: .32rem;
+      flex: none !important;
+    }
+    ::v-deep .fild-body {
+      position: relative;
+      color: #969799;
+      text-align: right;
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
+    
+    ::v-deep .uni-input-wrapper {
+      font-size: .4rem;
+      color: #262626;
+      cursor: pointer;
+    }
+    
+    ::v-deep .uni-input-input {
+      font-size: .4rem !important;
+      color: #262626;
+      font-weight: 500;
+    }
+    ::v-deep .uni-textarea-textarea {
+      font-size: .4rem !important;
+      color: #262626 !important;
+      font-weight: 500;
+    }
+  }
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 100px;
+    font-family: PingFangSC-Regular,PingFang SC;
+    font-size: .32rem;
+    font-weight: 400;
+    line-height: .453333rem;
+    color: #999;
+    text-align: center;
+    
+    image {
+      width: 2rem;
+      height: 2rem;
+    }
   }
 </style>

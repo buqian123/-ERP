@@ -7,12 +7,12 @@
       <text>请在「需求」中选择具体需求，新增服务单</text>
     </view>
     <view class="service-list">
-      <view class="service-item" v-for="(item, index) in 2" :key="index" @tap="gpDetail">
+      <view class="service-item" v-for="(item, index) in serviceList" :key="item.id" @tap="gpDetail(item.id)">
         <view class="service-item-top">
-          <view class="text"> 服务编号：202109011051061442906839 </view>
-          <view class="text"> 服务单类型：测量-示例(请去PC端修改) </view>
-          <view class="text"> 派单时间：2021-09-01 10:51 </view>
-          <view class="text"> 客户：AnDragon </view>
+          <view class="text"> 服务编号：{{item.id}} </view>
+          <view class="text"> 服务单类型：{{item.serviceType}} </view>
+          <view class="text"> 派单时间：{{item.serviceTime}} </view>
+          <view class="text"> 客户：{{item.customerName}} </view>
           <view class="text flex-jsac">
             <text>详细地址：杭州解百城市奥莱A座-A8-1-1011</text>
             <image src="/static/address.png" class="img"></image>
@@ -25,26 +25,51 @@
         <view class="service-item-center flex-cen">
           <view class="service-person">ZhengYu</view>
           <view class="service-arrive">进行中</view>
-          <view class="service-person">ZhengYu</view>
+          <view class="service-person">{{item.servicePeople}}</view>
         </view>
       </view>
     </view>
-    <view class="van-list__finished-text">已显示全部数据</view>
-    <view class="van-list__placeholder"></view>
+    <view v-if="serviceList.length != 0">
+      <view class="van-list__finished-text">已显示全部数据</view>
+      <view class="van-list__placeholder"></view>
+    </view>
+    <view class="no-data" v-if="serviceList.length == 0">
+      <image src="/static/no-chart.png"></image>
+      暂无跟进记录
+    </view>
   </view>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 export default {
+  computed: {
+    ...mapState({
+      cusId: state => state.customer.cusId
+    })
+  },
+  created() {
+    this.getService()
+  },
   data() {
     return {
-      
+      serviceList: []
     }
   },
   methods: {
-    gpDetail() {
+    getService() {
+      let data = {
+        customerId: this.cusId,
+        limit: 10,
+        page: 1
+      }
+      this.$u.api.getServiceByCusId(data).then(res => {
+        this.serviceList = res.data
+      })
+    },
+    gpDetail(id) {
       uni.navigateTo({
-        url: '/pages/customer/cus-detail-type/service/serviceDetail'
+        url: '/pages/customer/cus-detail-type/service/serviceDetail?id=' + id
       })
     }
   }
@@ -174,17 +199,5 @@ export default {
         }
       }
     }
-  }
-
-  .van-list__finished-text {
-    color: #969799;
-    font-size: .373333rem;
-    line-height: 1.333333rem;
-    text-align: center;
-  }
-
-  .van-list__placeholder {
-    height: 3rem;
-    pointer-events: none;
   }
 </style>

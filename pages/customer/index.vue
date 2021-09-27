@@ -25,8 +25,8 @@
       </view>
       <view class="nav-tab">
         <view class="nav-tab-container">
-          <view class="text" :class="{current: navTabIndex == 0}" @tap="navTabIndex = 0">线索</view>
-          <view class="text" :class="{current: navTabIndex == 1}" @tap="navTabIndex = 1">客户</view>
+          <view class="text" :class="{current: navTabIndex == 0}" @tap="changeNavTabIndex(0)">线索</view>
+          <view class="text" :class="{current: navTabIndex == 1}" @tap="changeNavTabIndex(1)">客户</view>
         </view>
       </view>
     </view>
@@ -35,39 +35,36 @@
       
       <view class="synchro" v-if="navTabIndex == 0">
         <view>未找到最新添加的联系人？</view>
-        <view class="right flex-jsac">
+        <view class="right flex-jsac" @tap="refreshCustomer">
           <text>点击同步</text>
           <u-icon name="reload"></u-icon>
         </view>
       </view>
       
       <view class="status-ul" v-if="navTabIndex == 1">
-        <view class="status-list cur">全部</view>
-        <view class="status-list">意向</view>
-        <view class="status-list">成单</view>
-        <view class="status-list">交付</view>
-        <view class="status-list">复购</view>
-        <view class="status-list">联购</view>
-        <view class="status-list">丢单</view>
-        <view class="status-list">无效</view>
+        <view class="status-list" :class="{cur: status.length == 0}" @tap="changeNavStatus('all')">全部</view>
+        <view class="status-list" v-for="item in navStatusList" :key="item.value"
+        :class="{cur: status.indexOf(item.value) != -1}" @tap="changeNavStatus(item.value)">
+          {{item.name}}
+        </view>
       </view>
       
-      <view class="cus-item">
-        <view class="cus-info" @tap="goCusDetail">
+      <view class="cus-item" v-for="item in cuslist" :key="item.id">
+        <view class="cus-info" @tap="goCusDetail(item.id)">
           <view class="info-box">
             <view class="info-left">
               <image src="../../static/logo.png" class="img"></image>
             </view>
             <view class="info-right">
               <view class="custom-name">
-                AnDragon
+                {{item.userName}}
                 <text>@微信</text>
               </view>
-              <view class="follow-right">跟进人： ZhengYu</view>
+              <view class="follow-right">跟进人： {{item.followUpPerson}}</view>
             </view>
           </view>
           <view class="label-ul">
-            <view class="label-list">自主拓客</view>
+            <view class="label-list">{{item.customerSource}}</view>
           </view>
           <view class="btn-box">
             <text>标记无效</text>
@@ -78,6 +75,22 @@
       </view>
     </view>
     
+    <view class="no-data" v-if="cuslist.length == 0">
+      <image src="/static/no-cus.png" class="img"></image>
+      暂无客户
+    </view>
+    
+    <view class="add-btn-box flex-cen">
+      <view class="add flex-wrap flex-cen-col">
+        <image src="/static/lingqu.png" class="img"></image>
+        <text>领取</text>
+      </view>
+      <view class="line"></view>
+      <view class="add flex-wrap flex-cen-col" @tap="addCustomer">
+        <image src="/static/add.png" class="img"></image>
+        <text>新建</text>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -86,13 +99,72 @@ export default {
   data() {
     return {
       navTabIndex: 0,
-      search: ''
+      search: '',
+      navStatusList: [
+        { value: 1, name: '意向' },{ value: 2, name: '成单' },
+        { value: 3, name: '交付' },{ value: 4, name: '复购' },
+        { value: 5, name: '联购' },{ value: 6, name: '丢单' },
+        { value: 7, name: '无效' }
+      ],
+      status: [],
+      cuslist: []
     }
   },
+  onShow() {
+    this.navTabIndex = 0
+    this.refreshCustomer()
+  },
   methods: {
-    goCusDetail() {
+    // 通过当前选择状态查询客户
+    getCusByStatus() {
+      // 状态为全部时， 不传status参数
+      if (this.status.length == 0) {
+        this.$u.api.queryCustomerByStatus().then(res => {
+          this.cuslist = res
+        })
+      } else {
+        this.$u.api.queryCustomerByStatus({status: this.status}).then(res => {
+          this.cuslist = res
+        })
+      }
+    },
+    // 获取 状态为线索的客户
+    refreshCustomer() {
+      this.$u.api.queryCustomerByStatus({status: [0]}).then(res => {
+        this.cuslist = res
+      })
+    },
+    // 选择线索 /  客户
+    changeNavTabIndex(index) {
+      this.navTabIndex = index
+      if (index == 0) {
+        this.refreshCustomer()
+      }
+      if (index == 1) {
+        this.status = []
+        this.getCusByStatus()
+      }
+    },
+    // 选择客户状态
+    changeNavStatus(val) {
+      if (val == 'all') {
+        this.status = []
+      } else {
+        this.status.indexOf(val) == -1 ? this.status.push(val) : this.status.splice(this.status.indexOf(val), 1)
+      }
+      this.getCusByStatus()
+    },
+    // 客户详情页面
+    goCusDetail(id) {
+      this.$store.commit('setCusId', id)
       uni.navigateTo({
         url: '/pages/customer/cusDetail'
+      })
+    },
+    // 新建客户
+    addCustomer() {
+      uni.navigateTo({
+        url: '/pages/customer/addCustomer'
       })
     }
   }
@@ -415,5 +487,58 @@ export default {
     }
   }
   
+}
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 1.6rem;
+  font-family: PingFangSC-Regular,PingFang SC;
+  font-size: .32rem;
+  font-weight: 400;
+  line-height: .453333rem;
+  color: #999;
+  text-align: center;
+  
+  .img {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+.add-btn-box {
+  width: 3.84rem;
+  height: 1.36rem;
+  background: linear-gradient(198deg,#5688ff,#2472d9);
+  box-shadow: 0 .04rem .106667rem 0 rgba(59,130,228,.3);
+  border-radius: .833333rem;
+  position: fixed;
+  right: .293333rem;
+  bottom: 1.333333rem;
+  z-index: 9;
+  
+  .add {
+    height: 100%;
+    
+    .img {
+      width: .533333rem;
+      height: .533333rem;
+      margin-bottom: .053333rem;
+    }
+    text {
+      display: block;
+      height: .44rem;
+      line-height: .44rem;
+      font-size: .32rem;
+      font-weight: 600;
+      color: #fff;
+    }
+  }
+  .line {
+    width: .013333rem;
+    height: .92rem;
+    background-color: hsla(0,0%,100%,.22);
+    margin-left: .493333rem;
+    margin-right: .493333rem;
+  }
 }
 </style>

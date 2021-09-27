@@ -4,7 +4,7 @@
     <view class="follow-head">
       <view class="content-box">
         <view class="input-title">跟进内容</view>
-        <view class="input-text">跟进内容测试测试测试</view>
+        <view class="input-text">{{followInfo.openContent}}</view>
       </view>
       <view class="input-info">
         <view class="input-list">
@@ -16,33 +16,53 @@
     <view class=" customer-info">
       <view class="input-list">
         <view class="input-title">客户名称</view>
-        <view class="input-text">AnDragon</view>
+        <view class="input-text">{{cusInfo.userName}}</view>
       </view>
       <view class="input-list">
         <view class="input-title">关联需求</view>
-        <view class="input-text">210901103810280</view>
-      </view>
-      <view class="input-list">
-        <view class="input-title">跟进模板</view>
-        <view class="input-text color">普通跟进</view>
+        <view class="input-text">{{followInfo.fromId}}</view>
       </view>
       <view class="input-list">
         <view class="input-title">跟进方式</view>
-        <view class="input-text">电话拜访</view>
+        <view class="input-text">{{followInfo.logTitle}}</view>
       </view>
       <view class="input-list">
         <view class="input-title">跟进时间</view>
-        <view class="input-text">2021-09-01 10:46:36</view>
+        <view class="input-text">{{followInfo.logDateTime}}</view>
       </view>
       <view class="input-list">
         <view class="input-title">跟进人</view>
-        <view class="input-text">ZhengYu</view>
+        <view class="input-text">{{cusInfo.followUpPerson}}</view>
       </view>
     </view>
   </view>
 </template>
 
 <script>
+import { mapState } from 'vuex'
+export default {
+  computed: {
+    ...mapState({
+      cusInfo: state => state.customer.cusInfo,
+      followId: state => state.customer.followId
+    })
+  },
+  data() {
+    return {
+      followInfo: {}
+    }
+  },
+  onLoad() {
+    this.getFollowInfo()
+  },
+  methods: {
+    getFollowInfo() {
+      this.$u.api.getLogDetail({id: this.followId}).then(res => {
+        this.followInfo = res
+      })
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>

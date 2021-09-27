@@ -62,7 +62,7 @@
         <u-tr class="u-tr" v-for="(item, index) in 20" :key="index">
         		<u-td width="10%" class="u-td">
               <!-- <u-checkbox style="height: 16px;" label-size="0" v-model="item.cke" size="26" shape="circle"></u-checkbox> -->
-              <radio :value="item" class="radio" />
+              <radio :value="String(item)" class="radio" />
             </u-td>
         		<u-td width="20%" class="u-td">{{item}}</u-td>
         		<u-td width="20%" class="u-td">{{item---index}}</u-td>
@@ -74,7 +74,7 @@
     <view style="width: 100%;height: 70px;"></view>
     <view class="btn-box flex-bet">
       <u-button style="width: 30%;" :hair-line="false" type="info" size="medium">清除</u-button>
-      <u-button style="width: 60%;" :hair-line="false" type="primary" size="medium">确定</u-button>
+      <u-button style="width: 60%;" :hair-line="false" type="primary" size="medium" @click="add">确定</u-button>
     </view>
   </view>
 </template>
@@ -118,6 +118,14 @@ export default {
           console.log('验证失败');
         }
       });
+    },
+    add() {
+      // var data = {
+      //   title: '新增任务',
+      //   list: [
+          
+      //   ]
+      // }
     }
   }
 }

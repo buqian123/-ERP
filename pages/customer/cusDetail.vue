@@ -1,14 +1,14 @@
 <template>
   <view class="customer-detail-page">
-    <view class="bgc"></view>
+    <view class="bgc" :class="{'bgc-follow': tabIndex == 1}"></view>
     <view class="bgc-line-gra"></view>
-    <view class="user-info flex-jsac">
+    <view class="user-info flex-jsac" :class="{'user-info-follow': tabIndex == 1}">
       <view class="avatar">
         <image src="../../static/work-nav/logo.png" class="img"></image>
       </view>
       <view class="user-info-right">
         <view class="user-info-name">
-          AnDragon
+          {{cusInfo.userName}}
           <text>@微信</text>
         </view>
         <view class="user-info-action flex-jsac">
@@ -28,15 +28,15 @@
       <view class="price-follow-container">
         <view class="price">
           <text class="price-top">签单合同总金额</text>
-          <text>￥1000000</text>
+          <text>￥{{cusInfo.contractMoney || '没钱'}}</text>
         </view>
         <view class="price">
           <text class="price-top">实际收款金额</text>
-          <text>￥500000</text>
+          <text>￥{{cusInfo.collectionMoney || '没钱'}}</text>
         </view>
         <view class="price">
           <text class="price-top">跟进人(1)</text>
-          <text>ZhengYu</text>
+          <text>{{cusInfo.followUpPerson || '没人'}}</text>
         </view>
       </view>
     </view>
@@ -50,17 +50,20 @@
     <!-- 联系 -->
     <view class="wx-phone">
       <view class="wx">
-        <image src="../../static/logo.png" class="img"></image>
-        <view class="text">微信</view>
+        <image src="/static/wx-icon.png" class="img"></image>
+        <view class="text-deactive">微信</view>
       </view>
       <view class="phone">
-        <image src="../../static/logo.png" class="img"></image>
-        <view class="text-deactive">手机</view>
+        <image src="/static/phone-icon.png" class="img"></image>
+        <view class="text">手机</view>
       </view>
     </view>
     
     <Radar v-if="tabIndex == 0"></Radar>
-    <Follow v-if="tabIndex == 1"></Follow>
+    <block v-if="cusInfo.id">
+      <Follow v-if="tabIndex == 1"></Follow>
+    </block>
+    
     <Demand v-if="tabIndex == 2"></Demand>
     <Payment v-if="tabIndex == 3"></Payment>
     <Service v-if="tabIndex == 4"></Service>
@@ -73,6 +76,7 @@ import Follow from './cus-detail-type/follow/follow.vue'
 import Demand from './cus-detail-type/demand/demand.vue'
 import Payment from './cus-detail-type/payment/payment.vue'
 import Service from './cus-detail-type/service/service.vue'
+import { mapState, mapMutations } from 'vuex'
 export default {
   components: {
     Radar,
@@ -94,10 +98,26 @@ export default {
         {
           text: '删除客户'
         }
-      ]
+      ],
+      cusInfo: {}
     }
   },
+  onShow() {
+    this.getCusInfo()
+  },
+  computed: {
+    ...mapState({
+      cusId: state => state.customer.cusId
+    })
+  },
   methods: {
+    ...mapMutations(['setCusInfo']),
+    getCusInfo() {
+      this.$u.api.selectCusInfo({id: this.cusId}).then(res => {
+        this.cusInfo = res
+        this.setCusInfo(res)
+      })
+    },
     selectAction(index) {
 
     },
@@ -106,7 +126,7 @@ export default {
         url: '/pages/customer/cusInfo'
       })
     },
-    goEditCus() {
+    goEditCus(id) {
       uni.navigateTo({
         url: '/pages/customer/editCus'
       })
@@ -122,7 +142,7 @@ export default {
     background: #f8f8f8;
 
     .bgc {
-      height: 10.13333rem;
+      height: 7.06667rem;
       background-color: #3975c5;
     }
 
@@ -136,7 +156,7 @@ export default {
   .user-info {
     height: 2.213333rem;
     padding: 0 .293333rem;
-    margin-top: -12rem;
+    margin-top: -8.93333rem;
 
     .avatar {
       width: 50px;
@@ -277,8 +297,6 @@ export default {
   }
 
 
-
-
   .van-list__finished-text {
     color: #969799;
     font-size: .373333rem;
@@ -289,5 +307,12 @@ export default {
   .van-list__placeholder {
     height: 3rem;
     pointer-events: none;
+  }
+  
+  .bgc-follow {
+    height: 10.1333rem !important;
+  }
+  .user-info-follow {
+    margin-top: -12rem !important;
   }
 </style>

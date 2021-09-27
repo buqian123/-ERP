@@ -71,7 +71,15 @@
         "enable" : false
     },
     "vueVersion" : "2",
-    "plus": {
-      "statusbar": { "immersed": true }
+    "plus" : {
+        "statusbar" : {
+            "immersed" : true
+        }
+    },
+    "h5" : {
+        "template" : "indext.html",
+        "router" : {
+            "mode" : "hash"
+        }
     }
 }

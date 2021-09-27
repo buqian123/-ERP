@@ -124,6 +124,11 @@ export default {
       status: 51
     }
   },
+  onLoad(options) {
+    this.$u.api.getServiceInfo({id: options.id}).then(res => {
+      console.log(res);
+    })
+  },
   methods: {
     cusInfo() {
       uni.navigateTo({
