@@ -34,8 +34,14 @@
           </view>
         </view>
       </view>
-      <view class="van-list__finished-text">已显示全部数据</view>
-      <view class="van-list__placeholder"></view>
+      <view v-if="loadAll">
+        <view class="van-list__finished-text">已显示全部数据</view>
+        <view class="van-list__placeholder"></view>
+      </view>
+      <view class="no-data" v-if="followList.length == 0">
+        <image src="/static/no-chart.png"></image>
+        暂无跟进记录
+      </view>
     </view>
   </view>
 </template>
@@ -46,32 +52,47 @@ export default {
   computed: {
     ...mapState({
       cusId: state => state.customer.cusId,
+      demandId: state => state.customer.demandId,
       cusInfo: state => state.customer.cusInfo,
     })
   },
   data() {
     return {
-      followList: []
+      // followList: []
     }
   },
-  created() {
-    this.getFollowLog()
+  props: {
+    followList: {
+      type: Array,
+      default: []
+    },
+    loadAll: {
+      type: Boolean,
+      default: false
+    }
   },
+  // created() {
+  //   this.getFollowLog()
+  // },
   methods: {
     ...mapMutations(['setFollowId']),
-    getFollowLog() {
-      let data = {
-        fromId: '|' + this.cusId + '|',
-        type: 'FOLLOW',
-        limit: 5,
-      }
-      this.$u.api.getAllLog(data).then(res => {
-        this.followList = res
-      })
-    },
+    // getFollowLog() {
+    //   let data = {
+    //     fromId: this.demandId,
+    //     type: 'FOLLOW',
+    //     limit: 1000,
+    //     page: 1
+    //   }
+    //   this.$u.api.getAllLog(data).then(res => {
+    //     this.followList = res.filter(item => {
+    //       return item.openLogs.length != 0
+    //     })
+    //   })
+    // },
     addFollow() {
+      // 添加普通跟进
       uni.navigateTo({
-        url: '/pages/customer/cus-detail-type/follow/addFollow'
+        url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/follow/addFollow'
       })
     },
     // 查看跟进详情

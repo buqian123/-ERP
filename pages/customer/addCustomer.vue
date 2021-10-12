@@ -98,7 +98,7 @@
             <view>年龄</view>
           </view>
           <view class="input-box">
-            <input type="text" v-model="formData.age" placeholder="请输入" />
+            <input type="text" v-model="formData.age" placeholder="请输入" disabled />
           </view>
         </view>
         
@@ -216,7 +216,13 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 export default {
+  computed: {
+    ...mapState({
+      userInfo: state => state.userInfo
+    })
+  },
   data() {
     return {
       formData: {
@@ -228,6 +234,7 @@ export default {
         age: '',
         sex: '',
         introduce: '',
+        followUpPerson: '',
         keyMessages: [
           {
             productName: '',
@@ -238,7 +245,8 @@ export default {
           }
         ],
         address: '',
-        birthday: ''
+        birthday: '',
+        status: '0'
       },
       // 控制客户来源选择列 显示隐藏
       customerSourceShow: false,
@@ -303,6 +311,15 @@ export default {
     selectBirthday(data) {
       this.formData.birthday = `${data.year}-${data.month}-${data.day}`
       this.birthdayDefault = `${data.year}-${data.month}-${data.day}`
+      
+      let nowDate = +new Date()
+      let bir = +new Date(this.formData.birthday)
+      let year = (nowDate - bir) / 1000 / 60 / 60 / 24 / 365
+      if (Math.floor(year) <= 0) {
+        this.formData.age = 0
+      } else {
+        this.formData.age = Math.floor(year)
+      }
     },
     // 新增关键信息
     addImp() {
@@ -327,38 +344,76 @@ export default {
       item.defaultIndex[0] = data[0].value
     },
     cancel() {
-      const pages = getCurrentPages();
-      console.log(pages);
-      if (pages.length === 2) {
-        uni.navigateBack({
-          delta: 1
-        });
-      } else if (pages.length === 1) {
-        uni.reLaunch({
-          url: '/pages/customer/index'
-        })
-      } else {
-        uni.navigateBack({
-          delta: 1
-        });
-      }
+      uni.redirectTo({
+        url: '/pages/customer/index'
+      })
     },
     // 提交
     addCustomer() {
-      for (let i in this.formData) {
-        if (this.formData[i] == '') {
+      this.formData.followUpPerson = this.userInfo.userName
+      let rule = {
+        '客户名称': this.formData.userName,
+        '手机号': this.formData.mobile,
+        '客户来源': this.formData.customerSource,
+        '省市区': this.formData.address,
+      }
+      
+      for (let i in rule) {
+        if (i == '手机号') {
+          if (this.formData.mobile.length == 1) {
+            if (rule[i][0].mobile === '') {
+              this.$refs.uToast.show({
+                title: `请输入联系方式`,
+                type: 'info'
+              })
+              return
+            }
+          } else {
+            this.formData.mobile.forEach(item => {
+              let phoneRule = {
+                '联系方式备注': item.remarks,
+                '联系方式': item.mobile
+              }
+              for(let i in phoneRule) {
+                if (phoneRule[i] === '') {
+                  this.$refs.uToast.show({
+                    title: `请输入${i}`,
+                    type: 'info'
+                  })
+                  return
+                }
+              }
+            })
+          }
+        } else {
+          if (rule[i] === '') {
+            console.log('22');
+            this.$refs.uToast.show({
+              title: `请输入${i}`,
+              type: 'info'
+            })
+            return
+          }
+        }
+      }
+      var reg = /^(0|86|17951)?(13[0-9]|15[012356789]|17[01678]|18[0-9]|14[57])[0-9]{8}$/;  
+      // var reg02 = /^0\d{2}-[1-9]\d{7}$/
+      // let mobileRule = /^[1][3,4,5,7,8][0-9]{9}$/g
+      this.formData.mobile.forEach(item => {
+        if (reg.test(item.mobile) || item.mobile == '') {
+        } else {
           this.$refs.uToast.show({
-            title: `请输入${i}`,
+            title: `联系方式${item.mobile}格式错误`,
             type: 'info'
           })
           return
         }
-      }
-      
+      })
+ 
       this.$u.api.addCustomer(this.formData).then(res => {
         uni.redirectTo({
-            url: '/pages/customer/index'
-        });
+          url: '/pages/customer/index'
+        })
       })
     }
   }

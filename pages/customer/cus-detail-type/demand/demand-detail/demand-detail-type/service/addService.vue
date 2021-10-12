@@ -13,10 +13,28 @@
       </u-field>
       <u-select v-model="serviceTypeShow" title="选择服务单类型" :list="serviceTypeList" @confirm="selectSlowType"></u-select>
       
-      <u-field v-model="addForm.serviceTime" :disabled="true" label="预约服务时间"
+<!--      <u-field v-model="addForm.serviceTime" :disabled="true" label="预约服务时间"
         placeholder="请选择" right-icon="arrow-right" @tap="serviceTimeShow = true">
-      </u-field>
-      <u-picker mode="time" v-model="serviceTimeShow" :params="timeParams" title ="选择时间" @confirm="selectServiceTime"></u-picker>
+      </u-field> -->
+      
+      <view class="service-time flex-bet">
+        <view class="left">预约服务时间</view>
+        <view class="right">
+          <datetime-picker
+            style="width: 90%;"
+          	placeholder="请选择"
+          	:start="startTime"
+          	end="2050-01-01 23:59"
+          	fields="minute"
+          	@change="selectServiceTime"
+          ></datetime-picker>
+          <image src="/static/arrow-right-img.png" class="right-icon"></image>
+        </view>
+      </view>
+      
+      
+      
+      <!-- <u-picker mode="time" v-model="serviceTimeShow" :params="timeParams" title ="选择时间" @confirm="selectServiceTime"></u-picker> -->
       
       <view class="title">派单信息</view>
       <u-field v-model="addForm.dispatchVos.servicePeople" :disabled="true" label="服务人"
@@ -96,11 +114,13 @@ export default {
       demandId: state => state.customer.demandId,
       cusId: state => state.customer.cusId,
       uploadUrl: state => state.uploadUrl,
-      cusInfo: state => state.customer.cusInfo
+      cusInfo: state => state.customer.cusInfo,
+      userInfo: state => state.userInfo
     })
   },
   data() {
     return {
+      startTime: '',
       addForm: {
         customerId: '',
         customerName: '',
@@ -108,20 +128,17 @@ export default {
         dispatchVos: {
           servicePeople: 'ZhengYu',
           dispatchRemarks: '',
+          dispatchPeople: '',
+          dispatchDate: '',
           imgUrl: [],
-          enclosure: {
-            imgUrl: [],
-          }
+          enclosure: []
         },
         serviceType: '',
-        serviceTime: ''
+        serviceTime: '',
+        createTime: ''
       },
       serviceTypeShow: false,
-      serviceTypeList: [
-        {value: 0, label: '类型1'},
-        {value: 1, label: '类型2'},
-        {value: 2, label: '类型3'}
-      ],
+      serviceTypeList: [],
       serviceTimeShow: false,
       timeParams: {
         year: true,
@@ -139,12 +156,29 @@ export default {
       }
     }
   },
+  onLoad() {
+    this.getOptions('4')
+    this.addForm.customerName = this.cusInfo.userName
+    this.startTime = this.$u.timeFormat(+new Date(), 'yy-mm-dd hh:MM')
+  },
   methods: {
+    getOptions(type) {
+      this.$u.api.getOptionList({type: type}).then(res => {
+        res.records.forEach(item => {
+          let obj = {
+            value: item.id,
+            label: item.typeName
+          }
+          this.serviceTypeList.push(obj)
+        })
+      })
+    },
     selectSlowType(data) {
       this.addForm.serviceType = data[0].label
     },
-    selectServiceTime(data) {
-      this.addForm.serviceTime = `${data.year}-${data.month}-${data.day} ${data.hour}:${data.minute}:${data.second}`
+    selectServiceTime(date) {
+      // this.addForm.serviceTime = `${data.year}-${data.month}-${data.day} ${data.hour}:${data.minute}:${data.second}`
+      this.addForm.serviceTime = date.data
     },
     beforeUpload(index, list) {
       this.$u.api.delUploadFile({fileName: list[index].file.name}).then(res => {
@@ -168,7 +202,7 @@ export default {
         size: res.data.size / 1000 + 'kb',
         name: res.data.url.substring(lastIndex-0+1)
       }
-      this.addForm.dispatchVos.enclosure.imgUrl.unshift(res.data.url)
+      this.addForm.dispatchVos.enclosure.unshift(res.data.url)
       this.fileList.unshift(obj)
     },
     cancel() {
@@ -177,8 +211,9 @@ export default {
       })
     },
     submit() {
-      // dispatchVos.enclosure.imgUrl
-
+      this.addForm.createTime = this.$u.timeFormat(new Date(), 'yyyy-mm-dd hh:MM:ss');
+      this.addForm.dispatchVos.dispatchPeople = this.userInfo.userName
+      console.log(this.addForm);
       // 获取上传的图片的路径
       this.addForm.dispatchVos.imgUrl = []
       let files = []
@@ -191,8 +226,14 @@ export default {
       this.addForm.customerId = this.cusId
       this.addForm.demandId = this.demandId
       this.addForm.customerName = this.cusInfo.userName
+      
+      this.addForm.dispatchVos.dispatchPeople = this.userInfo.userName
+      this.addForm.dispatchVos.dispatchDate = this.$u.timeFormat(new Date(), 'yyyy-mm-dd hh:MM:ss');
+      
       this.$u.api.addService(this.addForm).then(res => {
-        console.log(res);
+        uni.navigateTo({
+          url: '/pages/customer/cus-detail-type/demand/demand-detail/index'
+        })
       })
     }
   }
@@ -430,6 +471,52 @@ export default {
     color: #fff;
     margin: 0;
     margin-left: .266667rem;
+  }
+}
+.service-time {
+  font-size: 14px;
+  padding: 10px 14px;
+  text-align: left;
+  position: relative;
+  color: #303133;
+  line-height: .64rem;
+  background-color: #fff;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  .left {
+    text-align: left;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-left: .16rem;
+    font-size: .426667rem;
+    font-weight: 500;
+    line-height: .613333rem;
+    color: #262626;
+    width: auto !important;
+    word-wrap: break-word;
+    margin-right: .32rem;
+    flex: none !important;
+  }
+  .right {
+    position: relative;
+    color: #969799;
+    text-align: right;
+    vertical-align: middle;
+    word-wrap: break-word;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    .right-icon {
+      width: .32rem;
+      height: .32rem;
+    }
   }
 }
 </style>

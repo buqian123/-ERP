@@ -7,7 +7,7 @@
       <text>请在「需求」中选择具体需求，新增服务单</text>
     </view>
     <view class="service-list">
-      <view class="service-item" v-for="(item, index) in serviceList" :key="item.id" @tap="gpDetail(item.id)">
+      <view class="service-item" v-for="(item, index) in serviceList" :key="item.id" @tap="goDetail(item.id)">
         <view class="service-item-top">
           <view class="text"> 服务编号：{{item.id}} </view>
           <view class="text"> 服务单类型：{{item.serviceType}} </view>
@@ -23,53 +23,66 @@
           </view>
         </view>
         <view class="service-item-center flex-cen">
-          <view class="service-person">ZhengYu</view>
+          <view class="service-person">{{item.dispatchVos.dispatchPeople}}</view>
           <view class="service-arrive">进行中</view>
-          <view class="service-person">{{item.servicePeople}}</view>
+          <view class="service-person">{{item.dispatchVos.servicePeople}}</view>
         </view>
       </view>
     </view>
-    <view v-if="serviceList.length != 0">
+    <view v-if="loadAll" style="padding-top: 2rem;">
       <view class="van-list__finished-text">已显示全部数据</view>
       <view class="van-list__placeholder"></view>
     </view>
     <view class="no-data" v-if="serviceList.length == 0">
       <image src="/static/no-chart.png"></image>
-      暂无跟进记录
+      暂无服务单记录
     </view>
   </view>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 export default {
   computed: {
     ...mapState({
-      cusId: state => state.customer.cusId
+      cusId: state => state.customer.cusId,
+      userInfo: state => state.userInfo
     })
   },
   created() {
-    this.getService()
+    // this.getService()
   },
   data() {
     return {
-      serviceList: []
+      // serviceList: []
+    }
+  },
+  props: {
+    serviceList: {
+      type: Array,
+      default: []
+    },
+    loadAll: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
-    getService() {
-      let data = {
-        customerId: this.cusId,
-        limit: 10,
-        page: 1
-      }
-      this.$u.api.getServiceByCusId(data).then(res => {
-        this.serviceList = res.data
-      })
-    },
-    gpDetail(id) {
+    ...mapMutations(['setServiceId']),
+    // getService() {
+    //   let data = {
+    //     customerId: this.cusId,
+    //     limit: 10,
+    //     page: 1
+    //   }
+    //   this.$u.api.getServiceByCusId(data).then(res => {
+    //     this.serviceList = res.data
+    //   })
+    // },
+    goDetail(id) {
+      this.setServiceId(id)
       uni.navigateTo({
-        url: '/pages/customer/cus-detail-type/service/serviceDetail?id=' + id
+        url: '/pages/customer/cus-detail-type/service/serviceDetail'
       })
     }
   }

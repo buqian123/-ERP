@@ -66,8 +66,11 @@ export default {
         address: this.address
       }
       this.$u.api.addCusImportInfo(data).then(res => {
-        uni.redirectTo({
-          url: '/pages/customer/cus-detail-type/demand/addDemand/cusImpotInfo/list'
+        // uni.redirectTo({
+        //   url: '/pages/customer/cus-detail-type/demand/addDemand/cusImpotInfo/list'
+        // })
+        uni.navigateBack({
+          delta: 1
         })
       })
     },

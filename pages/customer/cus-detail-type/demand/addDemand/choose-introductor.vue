@@ -13,17 +13,23 @@
           </view>
           <view class="right">ZhengYu对接</view>
         </view>
-        <view class="van-list__finished-text">已显示全部数据</view>
-        <view class="van-list__placeholder"></view>
+        <view v-if="introducerList.length != 0">
+          <view class="van-list__finished-text">已显示全部数据</view>
+          <view class="van-list__placeholder"></view>
+        </view>
+        <view class="no-data" v-if="introducerList.length == 0">
+          <image src="/static/no-chart.png"></image>
+          暂无介绍人
+        </view>
       </view>
     </view>
     <view class="submit-btn flex-bet">
-      <view class="left flex-jsac" v-for="item in activeIntroducer" :key="id">
+      <view class="left flex-jsac">
         <view class="choose">已选：</view>
         <view class="choose-list flex-jsac">
           <view class="item">
-            <text>{{item.introducerName}}</text>
-            <view class="img flex-cen">x</view>
+            <text>{{activeIntroducer.introducerName}}</text>
+            <view class="img flex-cen" @tap="cancelSelect">x</view>
           </view>
         </view>
       </view>
@@ -38,26 +44,30 @@ export default {
     return {
       searchVal: '',
       introducerList: [],
-      activeIntroducer: []
+      activeIntroducer: {}
     }
   },
   onLoad() {
-    this.$u.api.getIntroducer({offset: 100}).then(res => {
+    this.$u.api.getIntroducer({offset: 0,limit: 10000000}).then(res => {
       this.introducerList = res
+      this.introducerList.push({introducerName: '测试',companyName: '测试公司',id: '12138'})
     })
   },
   methods: {
     selectItr(data) {
-      this.activeIntroducer.push(data)
+      this.activeIntroducer = data
+    },
+    cancelSelect(item) {
+      this.activeIntroducer = {}
     },
     submit() {
-      uni.redirectTo({
-        url: '/pages/customer/cus-detail-type/demand/addDemand/index'
-        // success() {
-        //   setTimeout(() => {
-        //     uni.$emit()
-        //   },400)
-        // }
+      uni.navigateBack({
+        delta: 1,
+        success: () => {
+          setTimeout(res => {
+            uni.$emit("introducer", this.activeIntroducer);
+          }, 200)
+        }
       })
     }
   }

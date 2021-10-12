@@ -119,6 +119,7 @@ export default {
       demandId: state => state.customer.demandId,
       cusId: state => state.customer.cusId,
       uploadUrl: state => state.uploadUrl,
+      lastPath: state => state.lastPath
     })
   },
   data() {
@@ -144,6 +145,7 @@ export default {
         second: true
       },
       paymentForm: {
+        customertId: '',
         demandId: '',
         distinguish: '0',
         slowPeople: 'ZhengYu',
@@ -207,7 +209,6 @@ export default {
       })
     },
     submit() {
-      let data = {}
       // 验证必填
       let rule = {
         '客户名称': this.addSignForm.customerName,
@@ -236,8 +237,6 @@ export default {
       this.addSignForm.demandId = this.demandId
       this.addSignForm.customerId = this.cusId
       
-      data['sign'] = this.addSignForm
-      
       if (this.moreFill) {
         
         let payRule = {
@@ -247,7 +246,6 @@ export default {
           '结算方式': this.paymentForm.settlementMethod,
           '收款时间': this.paymentForm.slowTime
         }
-        console.log(payRule);
         for (let i in payRule) {
           if (payRule[i] === '') {
             console.log(payRule[i]);
@@ -278,14 +276,28 @@ export default {
         })
         
         this.paymentForm.demandId = this.demandId
-        data['money'] = this.paymentForm
+        this.paymentForm.customertId = this.cusId
+        
+        this.$u.api.addSign(this.addSignForm).then(res => {
+          this.$u.api.addTransact(this.paymentForm).then(res => {
+            // uni.navigateBack({
+            //   delta: 1
+            // })
+            uni.redirectTo({
+              url: '/' + this.lastPath
+            })
+          })
+        })
+      } else {
+        this.$u.api.addSign(this.addSignForm).then(res => {
+          // uni.navigateBack({
+          //   delta: 1
+          // })
+          uni.redirectTo({
+            url: '/' + this.lastPath
+          })
+        })
       }
-      
-      console.log(data);
-      
-      this.$u.api.addSign(data).then(res => {
-        console.log(res);
-      })
     }
   }
 }

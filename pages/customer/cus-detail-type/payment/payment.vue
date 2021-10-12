@@ -8,27 +8,27 @@
     <view class="pay-list">
       <view class="payment-item" v-for="item in collectList" :key="item.id">
         <view class="payment-title flex-jsac">
-          <view class="title-tag">{{item.distinguish == '0' ? '收款' : '退款'}}</view>
-          <view class="title ell">收款编号：{{item.id}}</view>
+          <view class="title-tag" :style="{backgroundColor: item.distinguish == 0 ? '#63af4e' : '#fd8517'}">{{item.distinguish == '0' ? '收款' : '退款'}}</view>
+          <view class="title ell">{{item.distinguish == 0 ? '收款' : '退款'}}编号：{{item.id}}</view>
         </view>
-        <view class="info-text-list">收款时间：{{item.slowTime}}</view>
+        <view class="info-text-list">{{item.distinguish == 0 ? '收款' : '退款'}}时间：{{item.slowTime}}</view>
         <view class="info-text-list">收款类型：{{item.slowType}}</view>
         <view class="info-text-list">结算方式：{{item.settlementMethod}}</view>
         <view class="info-text-list">审核状态：{{item.isExamine == '0' ? '已审核' : '待审核'}}</view>
         <view class="info-text-list flex-jsac">
-          本次收款：
+          本次{{item.distinguish == 0 ? '收款' : '退款'}}：
           <text class="info-text-cur">{{item.money}}元</text>
         </view>
-        <view class="info-text-list">收款备注：{{item.remarks}}</view>
+        <view class="info-text-list">{{item.distinguish == 0 ? '收款' : '退款'}}备注：{{item.remarks}}</view>
         <view class="img-ul" v-if="item.imgUrl">
           <image class="img" :src="subitem" v-for="(subitem, index) in item.imgUrl" :key="index"></image>
         </view>
         <view class="pay-btn-box flex-bet">
           <view class="pay-btn-left flex-jsac">
             <image src="/static/logo.png" class="avatar"></image>
-            <text>{{item.slowPeople}}收款</text>
+            <text>{{item.slowPeople}}{{item.distinguish == 0 ? '收款' : '退款'}}</text>
           </view>
-          <view class="pay-btn-right flex-jsac">
+          <view class="pay-btn-right flex-jsac" @tap="editPayment(item.distinguish, item.id)">
             <view class="flex-jsac">
               <!-- <image src="../../static/jingao.png" class="img"></image> -->
               <text>修改</text>
@@ -37,32 +37,81 @@
         </view>
       </view>
     </view>
-    <view v-if="collectList.length != 0">
+    <view v-if="loadAll" style="padding-top: 2rem;">
       <view class="van-list__finished-text">已显示全部数据</view>
       <view class="van-list__placeholder"></view>
     </view>
     <view class="no-data" v-if="collectList.length == 0">
       <image src="/static/no-chart.png"></image>
-      暂无跟进记录
+      暂无收款记录
     </view>
   </view>
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex'
 export default {
+  computed: {
+    ...mapState({
+      cusId: state => state.customer.cusId
+    })
+  },
   data() {
     return {
-      collectList: []
+      // collectList: [],
+      settlementMethodList: [
+        {value: 0,label: '微信支付'},
+        {value: 1,label: '支付宝'},
+        {value: 2,label: '现金'},
+        {value: 3,label: 'POS'},
+        {value: 4,label: '银行转账'},
+        {value: 5,label: '内部调账'},
+        {value: 6,label: '支票'},
+        {value: 7,label: '其他'}
+      ]
     }
   },
   created() {
-    this.getCollectList()
+    // this.getCollectList()
+    this.collectList = this.collectList.reverse()
+    this.collectList.forEach(item => {
+      this.settlementMethodList.forEach(sitem => {
+        if (item.settlementMethod == sitem.value) {
+          item.settlementMethod = sitem.label
+        }
+      })
+    })
+  },
+  props: {
+    collectList: {
+      type: Array,
+      default: []
+    },
+    loadAll: {
+      type: Boolean,
+      default: false
+    }
   },
   methods: {
-    getCollectList() {
-      this.$u.api.getCollect({limit: 10, offset: 1}).then(res => {
-        this.collectList = res
-        console.log(this.collectList)
+    ...mapMutations(['setLastPath']),
+    // getCollectList() {
+    //   this.$u.api.getCollectForCus({limit: 10, offset: 1, customerId: this.cusId}).then(res => {
+    //     this.collectList = res.records.reverse()
+    //     this.collectList.forEach(item => {
+    //       this.settlementMethodList.forEach(sitem => {
+    //         if (item.settlementMethod == sitem.value) {
+    //           item.settlementMethod = sitem.label
+    //         }
+    //       })
+    //     })
+    //   })
+    // },
+    editPayment(type,id) {
+      let routes =  getCurrentPages();
+      let currPage = routes[routes.length - 1].route
+      this.setLastPath(currPage)
+      uni.navigateTo({
+        url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/payment/editCollect?type=' + type + '&id=' + id
       })
     }
   }

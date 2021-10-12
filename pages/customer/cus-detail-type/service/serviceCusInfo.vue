@@ -1,46 +1,42 @@
 <template>
   <!-- 客户资料 -->
-  <view class="wrap">
+  <view class="wrap" v-if="info.customer">
     <view class="group">
       <view class="row">
         <view class="row-label">*客户名称</view>
-        <view class="row-content">AnDragon</view>
+        <view class="row-content">{{info.customer.userName}}</view>
       </view>
       <view class="row">
         <view class="row-label">*省市区</view>
-        <view class="row-content"></view>
+        <view class="row-content">{{info.customer.address}}</view>
       </view>
     </view>
-    <view class="group">
+    <view class="group" v-if="info.customer.keyMessages != null">
       <view class="thead">关键信息</view>
       <view class="row">
-        <view class="row-label">客户户型</view>
-        <view class="row-content">三室</view>
+        <view class="row-label">产品类型</view>
+        <view class="row-content">{{info.customer.keyMessages.productType}}</view>
       </view>
       <view class="row">
-        <view class="row-label">房屋面积</view>
-        <view class="row-content">200平米</view>
+        <view class="row-label">产品名称</view>
+        <view class="row-content">{{info.customer.keyMessages.productName}}</view>
       </view>
       <view class="row">
         <view class="row-label">详细地址</view>
         <view class="row-content">
-          <text>杭州解百城市奥莱A座-A8-1-1011</text>
+          <text>{{info.customer.keyMessages.address}}</text>
           <text class="goto-address-api">到这去</text>
         </view>
-      </view>
-      <view class="row">
-        <view class="row-label">装修阶段</view>
-        <view class="row-content">水电</view>
       </view>
     </view>
     <view class="group">
       <view class="row">
         <view class="row-label">签单人</view>
-        <view class="row-content">ZhengYu</view>
+        <view class="row-content">{{info.sign.signPeople}}</view>
       </view>
       <view class="row">
         <view class="row-label">签单日期</view>
-        <view class="row-content">2021-09-01 10:47:46</view>
+        <view class="row-content">{{info.sign.signTime}}</view>
       </view>
       <view class="row">
         <view class="row-label">关联活动</view>
@@ -49,15 +45,15 @@
       <view class="stats-outer">
         <view class="stats-inner">
           <view class="stats-cell">
-            <view>1000000</view>
+            <view>{{info.sign.contractMoney}}</view>
             <view>合同金额</view>
           </view>
           <view class="stats-cell">
-            <view>500000</view>
+            <view>{{info.sign.collectionMoney}}</view>
             <view>已收金额</view>
           </view>
           <view class="stats-cell">
-            <view>500000</view>
+            <view>{{info.sign.contractMoney - info.sign.collectionMoney}}</view>
             <view>待收金额</view>
           </view>
         </view>
@@ -67,25 +63,44 @@
       <view class="thead">其他信息</view>
       <view class="row">
         <view class="row-label">性别</view>
-        <view class="row-content">男</view>
+        <view class="row-content">{{info.customer.sex}}</view>
       </view>
       <view class="row">
         <view class="row-label">年龄</view>
-        <view class="row-content"></view>
+        <view class="row-content">{{info.customer.age}}</view>
       </view>
       <view class="row">
         <view class="row-label">生日</view>
-        <view class="row-content"></view>
+        <view class="row-content">{{info.customer.birthday}}</view>
       </view>
       <view class="row">
         <view class="row-label">客户简介</view>
-        <view class="row-content"></view>
+        <view class="row-content">{{info.customer.introduce}}</view>
       </view>
     </view>
   </view>
 </template>
 
 <script>
+import { mapState } from 'vuex'
+export default {
+  computed: {
+    ...mapState({
+      serviceId: state => state.customer.serviceId,
+      cusId: state => state.customer.cusId
+    })
+  },
+  onLoad(options) {
+    this.$u.api.getServiceAndCusInfo({customerId: this.cusId, demandId: options.id}).then(res => {
+      this.info = res
+    })
+  },
+  data() {
+    return {
+      info: {}
+    }
+  }
+}
 </script>
 
 <style lang="less" scoped>

@@ -7,12 +7,23 @@
           <view class="item-con">
             <image class="left" src="/static/item-img.png" v-if="item.keyId != activeId"></image>
             <image class="left" src="/static/active-item-img.png" v-if="item.keyId == activeId"></image>
-            <view class="right">{{item.productName + '/' + item.productType}}</view>
+            <view class="right">
+              <view>{{item.productName + '/' + item.productType}}</view>
+              <view>{{item.address}}</view>
+            </view>
           </view>
           <view class="action">
             <text>修改</text>
             <text @tap.stop="delItem(item.keyId)">删除</text>
           </view>
+        </view>
+        <view v-if="infolist.length != 0">
+          <view class="van-list__finished-text">已显示全部数据</view>
+          <view class="van-list__placeholder"></view>
+        </view>
+        <view class="no-data" v-if="infolist.length == 0">
+          <image src="/static/no-chart.png"></image>
+          暂无介绍人
         </view>
       </view>
       <view style="height: 2rem;"></view>
@@ -21,6 +32,7 @@
         <view class="btn-list flex-cen" @tap="submit">确认</view>
       </view>
     </view>
+    <u-toast ref="uToast" />
   </view>
 </template>
 
@@ -44,7 +56,7 @@ export default {
   },
   methods: {
     getInfoList() {
-      this.$u.api.getCusImportInfoAll().then(res => {
+      this.$u.api.getCusImportInfoAll({limit: 10000000, offset: 0}).then(res => {
         this.infolist = res
       })
     },
@@ -55,6 +67,10 @@ export default {
     },
     delItem(id) {
       this.$u.api.delCusImportInfo({id: id}).then(res => {
+        this.$refs.uToast.show({
+          title: `删除成功！`,
+          type: 'info'
+        })
         this.getInfoList()
       })
     },
@@ -62,14 +78,10 @@ export default {
       this.activeId = data.keyId
       this.activeItem = data
     },
-    submit() {
-      // let pages = getCurrentPages()
-      // let prevPage = pages[ pages.length - 2 ]
-      // console.log(prevPage);
-      // prevPage.addForm.keyId = this.activeItem.keyId
-      // prevPage.keyInfo = `${this.activeItem.productName}/${this.activeItem.productType}\n${this.activeItem.address}`
-      uni.redirectTo({
-        url: '/pages/customer/cus-detail-type/demand/addDemand/index',
+    submit() {  
+      
+      uni.navigateBack({
+        delta: 1,
         success: () => {
           setTimeout(res => {
             uni.$emit("keyInfo", this.activeItem);
@@ -78,8 +90,8 @@ export default {
       })
     },
     cancel() {
-      uni.redirectTo({
-        url: '/pages/customer/cus-detail-type/demand/addDemand/index'
+      uni.navigateBack({
+        delta: 1
       })
     }
   }

@@ -1,7 +1,7 @@
 <template>
   <view class="demand">
     <view class="van-pull-refresh__head"></view>
-    <view class="header-bgc"></view>
+    <view class="header-bgc" :style="{'height': tabIndex == 0 ? '' : '5.97333rem'}"></view>
     <view class="flush-header">
       <view class="search-header">
         <u-search placeholder="姓名(昵称)/手机号/地址(如碧桂园-2-3-102)" shape="square" :clearabled="true" 
@@ -19,11 +19,11 @@
       </view>
       
       <view class="tab-list">
-        <view class="tab-item" :class="{curr: tabIndex == 0}" @tap="tabIndex = 0">全部</view>
-        <view class="tab-item" :class="{curr: tabIndex == 1}" @tap="tabIndex = 1">跟进中</view>
-        <view class="tab-item" :class="{curr: tabIndex == 2}" @tap="tabIndex = 2">已签约</view>
-        <view class="tab-item" :class="{curr: tabIndex == 3}" @tap="tabIndex = 3">已交付</view>
-        <view class="tab-item" :class="{curr: tabIndex == 4}" @tap="tabIndex = 4">已流失</view>
+        <view class="tab-item" :class="{curr: tabIndex == 0}" @tap="changeTab(0)">全部</view>
+        <view class="tab-item" :class="{curr: tabIndex == 1}" @tap="changeTab(1)">跟进中</view>
+        <view class="tab-item" :class="{curr: tabIndex == 2}" @tap="changeTab(2)">已签约</view>
+        <view class="tab-item" :class="{curr: tabIndex == 3}" @tap="changeTab(3)">已交付</view>
+        <view class="tab-item" :class="{curr: tabIndex == 4}" @tap="changeTab(4)">已流失</view>
       </view>
       <view class="list-header flex-bet">
         <view>共2个需求</view>
@@ -34,7 +34,7 @@
       </view>
     </view>
     <view class="content">
-      <view class="bgc-container">
+      <view class="bgc-container" v-if="tabIndex == 0">
         <view class="price-count">
           <view class="price-count-item">
             <view class="price-count-item-price">
@@ -59,7 +59,8 @@
           </view>
         </view>
       </view>
-      <view class="liner-grand-bgc"></view>
+      <view class="liner-grand-bgc" :style="{'top': tabIndex == 0 ? '' : '5.97333rem'}"></view>
+      
       <view class="list">
         <view class="list-box">
           <view class="item" v-for="(item, index) in 3" :key="index" @tap="goDetail">
@@ -137,10 +138,12 @@
             </view>
           </view>
         </view>
+        
+        <view class="van-list__finished-text">已显示全部数据</view>
+        <view class="van-list__placeholder"></view>
+        
       </view>
     </view>
-    <view class="van-list__finished-text">已显示全部数据</view>
-    <view class="van-list__placeholder"></view>
   </view>
 </template>
 
@@ -152,7 +155,13 @@ export default {
       tabIndex: 0
     }
   },
+  onLoad() {
+    
+  },
   methods: {
+    changeTab(i) {
+      this.tabIndex = i
+    },
     goDetail() {
       uni.navigateTo({
         url: '/pages/customer/cus-detail-type/demand/demand-detail/index'
@@ -165,7 +174,6 @@ export default {
 <style lang="scss" scoped>
 .demand {
   width: 100%;
-  height: 100%;
   min-height: 100vh;
   background: #f5f5f5;
   overflow: hidden;
@@ -191,7 +199,7 @@ export default {
   right: 0;
   z-index: 1;
   background-color: #3975c5;
-  height: 8.02667rem;
+  height: 9.22667rem;
 }
 .flush-header {
   background-color: #3975c5;
@@ -303,7 +311,7 @@ export default {
     position: relative;
   }
   .curr {
-    color: #fff!important;
+    color: #fff !important;
   }
 }
 .content {
@@ -359,7 +367,7 @@ export default {
     position: fixed;
     left: 0;
     right: 0;
-    top: 8.02667rem;
+    top: 9.22667rem;
   }
   .list {
     height: auto;

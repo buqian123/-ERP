@@ -17,7 +17,7 @@
         </view>
       </view>
       <view class="list-header flex-bet">
-        <view>共2人</view>
+        <view>共{{cuslist.length}}人</view>
         <view class="filter-item">
           <view class="ell">全公司</view>
           <view class="filter-more"></view>
@@ -67,9 +67,9 @@
             <view class="label-list">{{item.customerSource}}</view>
           </view>
           <view class="btn-box">
-            <text>标记无效</text>
+            <text v-if="navTabIndex == 0" @tap="invalidTag(item)">标记无效</text>
             <text>转介绍人</text>
-            <text>转客户</text>
+            <text v-if="navTabIndex == 0" @tap.stop="changeStatus(item)">转客户</text>
           </view>
         </view>
       </view>
@@ -95,7 +95,13 @@
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex'
 export default {
+  computed: {
+    ...mapState({
+      cusTabIndex: state => state.customer.cusTabIndex
+    })
+  },
   data() {
     return {
       navTabIndex: 0,
@@ -110,19 +116,30 @@ export default {
       cuslist: []
     }
   },
-  onShow() {
-    this.navTabIndex = 0
-    this.refreshCustomer()
+  onLoad() {
+    this.setDefault()
+    this.setLastPath('')
+    if (this.cusTabIndex) {
+      this.navTabIndex = this.cusTabIndex
+    }
+    if (this.navTabIndex == 0) {
+      this.refreshCustomer()
+    } else {
+      this.getCusByStatus()
+    }
   },
   methods: {
+    ...mapMutations(['setTabIndex', 'setDefault', 'setLastPath']),
     // 通过当前选择状态查询客户
     getCusByStatus() {
       // 状态为全部时， 不传status参数
       if (this.status.length == 0) {
+        this.cuslist=[]
         this.$u.api.queryCustomerByStatus().then(res => {
           this.cuslist = res
         })
       } else {
+        this.cuslist=[]
         this.$u.api.queryCustomerByStatus({status: this.status}).then(res => {
           this.cuslist = res
         })
@@ -130,6 +147,7 @@ export default {
     },
     // 获取 状态为线索的客户
     refreshCustomer() {
+      this.cuslist=[]
       this.$u.api.queryCustomerByStatus({status: [0]}).then(res => {
         this.cuslist = res
       })
@@ -137,6 +155,11 @@ export default {
     // 选择线索 /  客户
     changeNavTabIndex(index) {
       this.navTabIndex = index
+      let tab = {
+        type: 'cusTabIndex',
+        value: index
+      }
+      this.setTabIndex(tab)
       if (index == 0) {
         this.refreshCustomer()
       }
@@ -165,6 +188,27 @@ export default {
     addCustomer() {
       uni.navigateTo({
         url: '/pages/customer/addCustomer'
+      })
+    },
+    // 转客户
+    changeStatus(item) {
+
+      let data =  {
+        id: item.id,
+        status: '1'
+      }
+      this.$u.api.changeCusStatus(data).then(res => {
+        this.refreshCustomer()
+      })
+    },
+    // 标记无效
+    invalidTag(item) {
+      let data =  {
+        id: item.id,
+        status: '7'
+      }
+      this.$u.api.editCusStatus(data).then(res => {
+        this.refreshCustomer()
       })
     }
   }

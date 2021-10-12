@@ -1,11 +1,11 @@
 <template>
   <view class="payment">
     <view class="pay-types">
-      <view class="pay-type-item flex-cen" @tap="addCollect">
+      <view class="pay-type-item flex-cen" @tap="addCollect(0)">
         <image src="/static/add-follow.png" class="img"></image>
         收款
       </view>
-      <view class="pay-type-item flex-cen" @tap="addPayment">
+      <view class="pay-type-item flex-cen" @tap="addCollect(1)">
         <image src="/static/add-follow.png" class="img"></image>
         退款
       </view>
@@ -14,7 +14,7 @@
     <view class="pay-list">
       <view class="payment-item" v-for="item in paymentList" :key="item.id">
         <view class="payment-title flex-jsac">
-          <view class="title-tag">{{item.distinguish == '0' ? '收款' : '退款'}}</view>
+          <view class="title-tag" :style="{backgroundColor: item.distinguish == 0 ? '#63af4e' : '#fd8517'}">{{item.distinguish == '0' ? '收款' : '退款'}}</view>
           <view class="title">收款编号：{{item.id}}</view>
         </view>
         <view class="info-text-list">收款时间：{{item.slowTime}}</view>
@@ -31,7 +31,7 @@
             <image src="/static/logo.png" class="avatar"></image>
             <text>{{item.slowPeople}}收款</text>
           </view>
-          <view class="pay-btn-right flex-jsac">
+          <view class="pay-btn-right flex-jsac" @tap="editPayment(item.distinguish, item.id)">
             <view class="flex-jsac">
               <!-- <image src="../../static/jingao.png" class="img"></image> -->
               <text>修改</text>
@@ -40,36 +40,92 @@
         </view>
       </view>
     </view>
-    <view class="van-list__finished-text">已显示全部数据</view>
-    <view class="van-list__placeholder"></view>
+    <view v-if="loadAll">
+      <view class="van-list__finished-text">已显示全部数据</view>
+      <view class="van-list__placeholder"></view>
+    </view>
+    <view class="no-data" v-if="paymentList.length == 0">
+      <image src="/static/no-chart.png"></image>
+      暂无收款记录
+    </view>
   </view>
 </template>
 
 <script>
+import { mapState, mapMutations } from 'vuex'
 export default {
+  computed: {
+    ...mapState({
+      cusId: state => state.customer.cusId,
+      demandId: state => state.customer.demandId
+    })
+  },
   data() {
     return {
-      paymentList: []
+      // paymentList: [],
+      settlementMethodList: [
+        {value: 0,label: '微信支付'},
+        {value: 1,label: '支付宝'},
+        {value: 2,label: '现金'},
+        {value: 3,label: 'POS'},
+        {value: 4,label: '银行转账'},
+        {value: 5,label: '内部调账'},
+        {value: 6,label: '支票'},
+        {value: 7,label: '其他'}
+      ]
+    }
+  },
+  props: {
+    paymentList: {
+      type: Array,
+      default: []
+    },
+    loadAll: {
+      type: Boolean,
+      default: false
     }
   },
   created() {
-    this.getCollectList()
+    // this.getCollectList()
+    this.paymentList = this.paymentList.reverse()
+    this.paymentList.forEach(item => {
+      this.settlementMethodList.forEach(sitem => {
+        if (item.settlementMethod == sitem.value) {
+          item.settlementMethod = sitem.label
+        }
+      })
+      
+    })
   },
   methods: {
-    getCollectList() {
-      this.$u.api.getCollect({limit: 10, offset: 1}).then(res => {
-        this.paymentList = res
-        console.log(this.paymentList)
+    ...mapMutations(['setLastPath']),
+    // getCollectList() {
+    //   this.$u.api.getCollectForDemand({limit: 10, offset: 1, demandId: this.demandId}).then(res => {
+    //     this.paymentList = res.records.reverse()
+    //     this.paymentList.forEach(item => {
+    //       this.settlementMethodList.forEach(sitem => {
+    //         if (item.settlementMethod == sitem.value) {
+    //           item.settlementMethod = sitem.label
+    //         }
+    //       })
+          
+    //     })
+    //   })
+    // },
+    addCollect(type) {
+      let routes =  getCurrentPages();
+      let currPage = routes[routes.length - 1].route
+      this.setLastPath(currPage)
+      uni.navigateTo({
+        url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/payment/addCollect?type=' + type
       })
     },
-    addCollect() {
+    editPayment(type,id) {
+      let routes =  getCurrentPages();
+      let currPage = routes[routes.length - 1].route
+      this.setLastPath(currPage)
       uni.navigateTo({
-        url: '/pages/customer/cus-detail-type/payment/addCollect?type=0'
-      })
-    },
-    addPayment() {
-      uni.navigateTo({
-        url: '/pages/customer/cus-detail-type/payment/addCollect?type=1'
+        url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/payment/editCollect?type=' + type + '&id=' + id
       })
     }
   }

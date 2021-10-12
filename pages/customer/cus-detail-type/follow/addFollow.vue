@@ -37,7 +37,26 @@
           <text class="field__word-limit-float">{{sysFollow.followContent.length}}/1000</text>
         </view>
         <u-input class="follow-content" v-model="sysFollow.followContent" type="textarea" :auto-height="false" maxlength="1000" />
-        <view class="voiceTool">按住说话</view>
+        <view class="voiceTool">
+          <view class="btn" @touchstart="voiceStart" @touchend="voiceEnd">
+            <image src="/static/microphone.png"></image>
+            <text>按住说话</text>
+          </view>
+          <view class="wave" :style="{display: voice ? 'block' : 'none'}">
+            <view class="inner">
+              <view class="music">
+                <text class="s1"></text>
+                <text class="s2"></text>
+                <text class="s3"></text>
+                <text class="s4"></text>
+                <text class="s5"></text>
+              </view>
+              <view class="text">松开转文字</view>
+              <view class="shape"></view>
+            </view>
+          </view>
+        </view>
+        
       </view>
 
       <view class="input-info">
@@ -47,11 +66,35 @@
         </view>
         <view class="input-list">
           <view class="input-title" style="padding-left: .213333rem;">关联需求</view>
-          <view class="input-right">
-            <view class="input-text">{{sysFollow.demandId}}</view>
+          <view class="input-right" @tap="openDemand">
+            <view class="input-text" :class="{'input-text-cur': sysFollow.demandId.length == 0}">{{sysFollow.demandId || '请选择'}}</view>
             <image src="/static/arrow-right-img.png" class="right-icon"></image>
           </view>
         </view>
+        
+        <uni-drawer ref="demandRef" mode="right" :mask-click="true" :width="320">
+          <view class="selete-demand">
+            <view class="title">需求</view>
+            <view class="sale-tips">请选择客户{{sysFollow.customerName}}相关的需求</view>
+            <view class="sale-ul">
+              <view class="item flex-jsac" v-for="item in demandlist" :key="item.id" @tap="selectDemandId(item.id)">
+                <view class="left">
+                  <view class="sale-number">需求编号：{{item.id}}</view>
+                  <view class="sale-number">需求品牌：{{item.demandType}}</view>
+                  <view class="sale-number">需求地址：{item.keyMessage.address}</view>
+                  <view class="sale-cus">{{item.demandFollowPeople}}跟进</view>
+                </view>
+                <view class="right">
+                  <view class="state" v-if="item.followState == 0">跟进中</view>
+                  <view class="state" v-if="item.followState == 1">已签约</view>
+                  <view class="state" v-if="item.followState == 2">已交付</view>
+                  <view class="state" v-if="item.followState == 3">已流失</view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </uni-drawer>
+        
         <view class="input-list">
           <view class="input-title" style="padding-left: .213333rem;">
             <text class="title-icon">*</text>
@@ -109,7 +152,7 @@
               服务单类型
             </view>
             <view class="input-right" @tap="serviceTypeShow = true">
-              <view class="input-text">{{serviceTypeText}}</view>
+              <view class="input-text" :class="{'input-text-cur': serviceTypeText == ''}">{{serviceTypeText || '请选择'}}</view>
               <image src="/static/arrow-right-img.png" class="right-icon"></image>
             </view>
           </view>
@@ -117,8 +160,18 @@
             <view class="input-title" style="padding-left: .213333rem;">
               服务单预约时间
             </view>
-            <view class="input-right" @tap="serviceTimeShow = true">
-              <view class="input-text">{{sysFollow.serviceSingle.serviceTime}}</view>
+            <view class="input-right">
+              <!-- <view class="input-text">{{sysFollow.serviceSingle.serviceTime}}</view> -->
+              <datetime-picker
+                class="input-text"
+              	placeholder="请选择"
+              	:start="startTime"
+              	end="2050-01-01 23:59"
+              	fields="minute"
+              	@change="selectServiceTime"
+              ></datetime-picker>
+              
+              
               <image src="/static/arrow-right-img.png" class="right-icon"></image>
             </view>
           </view>
@@ -130,11 +183,32 @@
               <text class="title-icon">*</text>
               服务人
             </view>
-            <view class="input-right">
+            <view class="input-right" @tap="$refs.servicePeopleRef.open()">
               <view class="input-text">{{sysFollow.serviceSingle.dispatchVos.servicePeople}}</view>
               <image src="/static/arrow-right-img.png" class="right-icon"></image>
             </view>
           </view>
+          
+          <uni-drawer ref="servicePeopleRef" mode="right" :mask-click="true" :width="320">
+            <view class="drawer-title">服务人</view>
+            <view class="drawer-search">
+              <u-search placeholder="请输入员工姓名" v-model="searchServicePeople" :show-action="false"></u-search>
+            </view>
+            <view class="peolist">
+              <view class="peo" v-for="(item, index) in servicePeopleList" :key="index" @tap="selectServicePeople(item)">
+                <view class="flex-jsac" style="padding: 10px;">
+                  <image src="/static/avatar-default-img.png" class="avatar"></image>
+                  <view class="peo-name flex-jsac">{{item}}</view>
+                </view>
+                <view class="border"></view>
+              </view>
+            </view>
+          </uni-drawer>
+          
+          
+          
+          
+          
           <view class="content-box">
             <view class="input-title">
               派单备注
@@ -195,7 +269,7 @@
       
       
       <view style="height: 10px;"></view>
-      <view class="create-next-plan" @tap="nextFollowPlanShow = true">
+      <view class="create-next-plan" v-if="nextFollowPlanShow == false" @tap="nextFollowPlanShow = true">
         <view class="create-next-plan-icon"></view>
         <span>添加下次跟进计划</span>
       </view>
@@ -222,8 +296,16 @@
               <text class="title-icon">*</text>
               提醒时间
             </view>
-            <view class="input-right" @tap="remindShow = true">
-              <view class="input-text">{{sysFollow.nextFollowPlan.remind}}</view>
+            <view class="input-right">
+              <!-- <view class="input-text">{{sysFollow.nextFollowPlan.remind}}</view> -->
+              <datetime-picker
+                class="input-text"
+              	placeholder="请选择"
+              	:start="startTime"
+              	end="2050-01-01 23:59"
+              	fields="minute"
+              	@change="selectRemind"
+              ></datetime-picker>
               <image src="/static/arrow-right-img.png" class="right-icon"></image>
             </view>
           </view>
@@ -249,13 +331,18 @@
     
     <u-select v-model="serviceTypeShow" :list="serviceTypeList" @confirm="selectServiceType" title="选择服务单类型"></u-select>
     
-    <u-picker mode="time" v-model="serviceTimeShow" :params="remindParams" title ="选择时间" @confirm="selectServiceTime"></u-picker>
+    <u-toast ref="uToast" />
   </view>
 </template>
 
 <script>
 import { mapState } from 'vuex'
+import datatimePicker from '@/components/datetime-picker/datetime-picker.vue'
+import jwx from '@/common/jwx.js'
 export default {
+  components: {
+    datatimePicker
+  },
   computed: {
     ...mapState({
       cusId: state => state.customer.cusId,
@@ -266,15 +353,18 @@ export default {
   onLoad() {
     this.sysFollow.customerName = this.cusInfo.userName
     this.sysFollow.customerId = this.cusId
+    this.startTime = this.$u.timeFormat(+new Date(), 'yy-mm-dd hh:MM')
+    jwx.initJssdk()
   },
   data() {
     return {
+      startTime: '',
       tabIndex: '0',
       sysFollow: {
         customerId: '',
         followContent: '',
         customerName: '',
-        demandId: '12345',
+        demandId: '',
         followMode: '0',
         followType: '',
         imgUrl: [],
@@ -288,12 +378,12 @@ export default {
           serviceType: '',
           serviceTime: '',
           dispatchVos: {
-            servicePeople: '',
+            servicePeople: 'along',
             dispatchRemarks: '',
             imgUrl: [],
-            enclosure: {
-              imgUrl: []
-            }
+            enclosure: [],
+            dispatchPeople: '',
+            dispatchDate: ''
           }
         },
         stayShop: '',
@@ -343,14 +433,27 @@ export default {
         {value:0,label: '类型一'},
         {value:1,label: '类型二'}
       ],
-      serviceTimeShow: false,
       fileList: [],
       uploadImgHeader: {
         'Authorization': uni.getStorageSync('token')
-      }
+      },
+      demandlist: [],
+      searchServicePeople: '',
+      servicePeopleList: ['along', 'zy', 'ZhengYu', '张三', '测试'],
+      voice: false
     }
   },
   methods: {
+    getCusDemand() {
+      let data = {
+        customerId: this.cusId,
+        limit: 1000000,
+        page: 1
+      }
+      this.$u.api.getCusDemand(data).then(res => {
+        this.demandlist = res.records
+      })
+    },
     // 过滤属性值为空的对象属性
     filterObj(obj) {
       let _newPar = {};
@@ -366,7 +469,24 @@ export default {
     },
     addFollow() {
       this.sysFollow.followType = this.tabIndex
-      // 获取上传的图片的路径
+      
+      // 处理传值
+      let data = {
+        customerId: this.sysFollow.customerId,
+        followContent: this.sysFollow.followContent,
+        customerName: this.sysFollow.customerName,
+        demandId: this.sysFollow.demandId,
+        followType: this.sysFollow.followType,
+        followMode: this.sysFollow.followMode,
+        imgUrl: []
+      }
+      // 必填规则
+      let rule = {
+        '跟进内容': this.sysFollow.followContent,
+        '跟进方式': this.sysFollow.followMode
+      }
+      
+      // 获取 普通跟进的 上传的图片的路径
       this.sysFollow.imgUrl = []
       let files = []
       files = this.$refs.uploadImg.lists.filter(val => {
@@ -374,52 +494,93 @@ export default {
       })
       files.forEach(item => {
         this.sysFollow.imgUrl.push(item.response.data.url)
+        data.imgUrl.push(item.response.data.url)
       })
       
-      // 获取派单信息 上传的图片 
-      this.sysFollow.serviceSingle.dispatchVos.imgUrl = []
-      let dispatchVosImgfiles = []
-      files = this.$refs.dispatchVosImgRef.lists.filter(val => {
-        return val.progress == 100;
-      })
-      files.forEach(item => {
-        this.sysFollow.serviceSingle.dispatchVos.imgUrl.push(item.response.data.url)
-      })
       
-
-      let obj = this.filterObj(this.$u.deepClone(this.sysFollow))
-      
-      // 判断跟进类型，传不同的参数
-      if (this.sysFollow.followType != 2 && this.nextFollowPlanShow != true) {
-        var { nextFollowPlan, serviceSingle ,...data } = obj;
-      } else {
-        if (this.sysFollow.followType == 2 && this.nextFollowPlanShow == true) {
-          var data = obj
-        } else {
-          if (this.sysFollow.followType == 2) {
-            var { nextFollowPlan ,...data } = obj;
-          }
-          
-          if (this.nextFollowPlanShow == true) {
-            var { serviceSingle ,...data } = obj;
-          }
-        }
+      // 进店邀约
+      if (this.tabIndex == 1) {
+        rule['邀约结果'] = this.sysFollow.inviteResule
+        rule['邀约到店时间'] = this.sysFollow.inviteTime
+        
+        data.inviteResule = this.sysFollow.inviteResule
+        data.inviteTime = this.sysFollow.inviteTime
+      }
+      // 测量邀约
+      if (this.tabIndex == 2) {
+        rule['邀约结果'] = this.sysFollow.inviteResule
+        rule['服务单类型'] = this.sysFollow.serviceSingle.serviceType
+        // rule['服务人'] = this.sysFollow.serviceSingle.dispatchVos.servicePeople
+        
+        data.inviteResule = this.sysFollow.inviteResule
+        data.serviceSingle = this.sysFollow.serviceSingle
+        data.serviceSingle.dispatchVos.dispatchPeople = this.sysFollow.serviceSingle.dispatchVos.dispatchPeople
+        data.serviceSingle.dispatchVos.dispatchDate = this.$u.timeFormat(new Date(), 'yyyy-mm-dd hh:MM:ss');
+        
+        // 获取派单信息 上传的图片
+        this.sysFollow.serviceSingle.dispatchVos.imgUrl = []
+        let dispatchVosImgfiles = []
+        dispatchVosImgfiles = this.$refs.dispatchVosImgRef.lists.filter(val => {
+          return val.progress == 100;
+        })
+        dispatchVosImgfiles.forEach(item => {
+          this.sysFollow.serviceSingle.dispatchVos.imgUrl.push(item.response.data.url)
+          data.serviceSingle.dispatchVos.imgUrl.push(item.response.data.url)
+        })
+        
       }
       
-      console.log(data);
-      // this.$u.api.addFollow(data).then(res => {
-      //   console.log(res)
+      // 跟进方式
+      if (this.sysFollow.followMode == 2) {
+        rule['接待定位'] = this.sysFollow.visitLocalhost
+        data.visitLocalhost = this.sysFollow.visitLocalhost
+      } 
+      if (this.sysFollow.followMode == 3) {
+        rule['留店时长'] = this.sysFollow.stayShop
+        rule['接待定位'] = this.sysFollow.visitLocalhost
+        data.stayShop = this.sysFollow.stayShop
+        data.visitLocalhost = this.sysFollow.visitLocalhost
+      }
+      
+      // 下次跟进计划
+      if (this.nextFollowPlanShow == true) {
+        rule['计划跟进内容'] = this.sysFollow.nextFollowPlan.planFollow
+        rule['提醒时间'] = this.sysFollow.nextFollowPlan.remind
+        data.nextFollowPlan = this.sysFollow.nextFollowPlan
+      }
+      
+      
+      for (let i in rule) {
+        if (rule[i] === '') {
+          this.$refs.uToast.show({
+            title: `请输入${i}`,
+            type: 'info'
+          })
+          return
+        }
+      }
+      data = this.filterObj(this.$u.deepClone(data))
+
+      this.$u.api.addFollow(data).then(res => {
         
-      //   uni.redirectTo({
-      //     url: '/pages/customer/cusDetail'
-      //   })
+        uni.redirectTo({
+          url: '/pages/customer/cusDetail'
+        })
         
-      // })
+      })
     },
     cancel() {
       uni.redirectTo({
         url: '/pages/customer/cusDetail'
       })
+    },
+    openDemand() {
+      this.getCusDemand()
+      this.$refs.demandRef.open()
+    },
+    selectDemandId(id) {
+      this.sysFollow.demandId = id
+      this.$refs.demandRef.close()
     },
     // 选择跟进方式
     selectFollowMode(i) {
@@ -433,11 +594,24 @@ export default {
     },
     // 获取接待定位
     getVisitLocalhost() {
-      
+      jWeixin.getLocation({
+          type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+          success: function (res) {
+            var latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+            var longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+            var speed = res.speed; // 速度，以米/每秒计
+            var accuracy = res.accuracy; // 位置精度
+            console.log(res)
+            console.log(speed,accuracy)
+          },
+          fail: function(err) {
+            console.log(err);
+          }
+      });
     },
     // 选择提醒时间
-    selectRemind(data) {
-      this.sysFollow.nextFollowPlan.remind = `${data.year}-${data.month}-${data.day} ${data.hour}:${data.minute}:${data.second}`
+    selectRemind(date) {
+      this.sysFollow.nextFollowPlan.remind = date.data
     },
     // 选择邀约结果
     selectInviteResule(data) {
@@ -451,8 +625,15 @@ export default {
       this.serviceTypeText = data[0].label
       this.sysFollow.serviceSingle.serviceType = data[0].value
     },
-    selectServiceTime(data) {
-      this.sysFollow.serviceSingle.serviceTime = `${data.year}-${data.month}-${data.day} ${data.hour}:${data.minute}`
+    // 选择预约服务时间
+    selectServiceTime(date) {
+      this.sysFollow.serviceSingle.serviceTime = date.data
+      console.log(this.sysFollow);
+    },
+    // 选择服务人
+    selectServicePeople(data) {
+      this.sysFollow.serviceSingle.dispatchVos.servicePeople = data
+      this.$refs.servicePeopleRef.close()
     },
     beforeUpload(index, list) {
       this.$u.api.delUploadFile({fileName: list[index].file.name}).then(res => {
@@ -519,16 +700,39 @@ export default {
       })
     },
     yuyin() {
-      // this.sdk.
-      wx.getLocation({
-          type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
-          success: function (res) {
-              var latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
-              var longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
-              var speed = res.speed; // 速度，以米/每秒计
-              var accuracy = res.accuracy; // 位置精度
+      jWeixin.scanQRCode({
+          desc: 'scanQRCode desc',
+          needResult: 0, // 默认为0，扫描结果由企业微信处理，1则直接返回扫描结果，
+          scanType: ["qrCode", "barCode"], // 可以指定扫二维码还是条形码（一维码），默认二者都有
+          success: function(res) {
+              // 回调
+              console.log(res);
+          },
+          error: function(res) {
+            console.log(res);
+              if (res.errMsg.indexOf('function_not_exist') > 0) {
+                  alert('版本过低请升级')
+              }
           }
       });
+    },
+    voiceStart() {
+      console.log('录音开始')
+      jWeixin.startRecord();
+      this.voice = true
+    },
+    voiceEnd() {
+      console.log('录音结束')
+      jWeixin.stopRecord({
+          success: function (res) {
+              var localId = res.localId;
+              console.log(res)
+          },
+          fail: function(err) {
+            console.log(err);
+          }
+      });
+      this.voice = false
     }
   }
 }
@@ -663,6 +867,89 @@ export default {
     .name {
       height: 1.41333rem;
       padding-left: .213333rem;
+    }
+  }
+  
+  .selete-demand {
+    width: 100%;
+    
+    .title {
+      width: 100%;
+      height: 1.706667rem;
+      padding-left: .426667rem;
+      font-family: PingFangSC-Medium,PingFang SC;
+      font-size: .4rem;
+      font-weight: 500;
+      line-height: 1.706667rem;
+      color: #262626;
+    }
+    .sale-tips {
+      width: 100%;
+      height: 1.066667rem;
+      padding: 0 .293333rem;
+      font-family: PingFangSC-Regular,PingFang SC;
+      font-size: .32rem;
+      font-weight: 400;
+      line-height: 1.066667rem;
+      color: #3975c5;
+      background: #eaf3ff;
+    }
+    .sale-ul {
+      width: 100%;
+      .item {
+        width: 100%;
+        padding: .373333rem .293333rem;
+        
+        &::after {
+          position: absolute;
+          box-sizing: border-box;
+          content: " ";
+          pointer-events: none;
+          top: -50%;
+          right: -50%;
+          bottom: -50%;
+          left: -50%;
+          border: .026667rem solid #ebedf0;
+          -webkit-transform: scale(.5);
+          transform: scale(.5);
+        }
+        
+        .left {
+          width: calc(100% - 1.6rem);
+          .sale-number {
+            width: 100%;
+            overflow: hidden;
+            font-family: PingFangSC-Medium,PingFang SC;
+            font-size: .346667rem;
+            font-weight: 400;
+            line-height: .506667rem;
+            color: #262626;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: .16rem;
+          }
+          .sale-cus {
+            font-family: PingFangSC-Regular,PingFang SC;
+            font-size: .346667rem;
+            font-weight: 400;
+            color: #999;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+        .right {
+          width: 1.6rem;
+          text-align: right;
+          .state {
+            font-family: PingFangSC-Regular,PingFang SC;
+            font-size: .32rem;
+            font-weight: 400;
+            line-height: .453333rem;
+            color: #1f9400;
+          }
+        }
+      }
     }
   }
 
@@ -868,5 +1155,47 @@ export default {
   .add-info {
     width: 100%;
     background: #fff;
+  }
+  .drawer-title {
+    font-size: .4rem;
+    line-height: .56rem;
+    color: #262626;
+    font-weight: 500;
+    padding: .586667rem .266667rem;
+    flex-shrink: 0;
+    background-color: #fff;
+    text-align: center;
+  }
+  .drawer-search {
+    padding: 0 .266667rem;
+    box-sizing: border-box;
+    background-color: #fff;
+  }
+  .peolist {
+    width: 100%;
+    .peo {
+      position: relative;
+      
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+      .peo-name {
+        font-size: 14px;
+        color: rgb(68, 68, 68);
+      }
+      .border {
+        // width: 100%;
+        // height: 1px;
+        position: absolute;
+        left: 11px;
+        right: 11px;
+        height: 1px;
+        border-bottom: 1px solid #f0f0f0;
+        transform: scaleY(0.5);
+      }
+    }
   }
 </style>

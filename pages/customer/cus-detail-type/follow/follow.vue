@@ -70,7 +70,8 @@
           </view>
         </view>
       </view>
-      <view v-if="loglist.length != 0">
+      
+      <view v-if="loglist.length != 0" style="padding-top: 2rem;">
         <view class="van-list__finished-text">已显示全部数据</view>
         <view class="van-list__placeholder"></view>
       </view>
@@ -107,12 +108,22 @@ export default {
       },
 
       cusStatusText: '',
-      loglist: []
+      // loglist: []
     }
   },
   mounted() {
+    // this.getFollowLog()
     this.getFollowInfo()
-    this.getFollowLog()
+  },
+  props: {
+    loglist: {
+      type: Array,
+      default: []
+    },
+    loadAll: {
+      type: Boolean,
+      default: false
+    }
   },
   methods: {
     ...mapMutations(['setFollowId']),
@@ -120,33 +131,46 @@ export default {
       let arr = this.statuslist.filter(item => {
         return item.value == this.cusInfo.status
       })
+      console.log(this.cusInfo)
       this.cusStatusText = arr[0].label
     },
-    getFollowLog() {
-      let data = {
-        fromId: '|' + this.cusId + '|',
-        type: 'FOLLOW',
-        limit: 5,
-        page: 1
-      }
-      this.$u.api.getAllLog(data).then(res => {
-        this.loglist = res.filter(item => {
-          return item.openLogs.length != 0
-        })
-      })
-    },
+    // getFollowLog() {
+    //   let data = {
+    //     customerId: this.cusId,
+    //     type: 'FOLLOW',
+    //     limit: 1000,
+    //     page: 1
+    //   }
+    //   this.$u.api.getAllLog(data).then(res => {
+    //     this.loglist = res.filter(item => {
+    //       return item.openLogs.length != 0
+    //     })
+    //   })
+    // },
     addFollow() {
       uni.navigateTo({
         url: '/pages/customer/cus-detail-type/follow/addFollow'
       })
     },
     // 改变客户状态
-    changeStatus(data) {
-      this.cusStatusText = data[0].label
+    changeStatus(item) {
+      let data =  {
+        id: this.cusId,
+        status: item[0].value
+      }
+      this.$u.api.editCusStatus(data).then(res => {
+        
+      })
     },
     // 确认标记无效
     handleInvalid() {
-      this.cusStatusText = '无效'
+      let data =  {
+        id: this.cusId,
+        status: '7'
+      }
+      this.$u.api.editCusStatus(data).then(res => {
+        this.cusStatusText = '无效'
+      })
     },
     // 查看跟进详情
     goDetail(id) {

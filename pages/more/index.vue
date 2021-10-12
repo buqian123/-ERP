@@ -12,10 +12,39 @@
       </view>
       <view class="more-item">联系我们</view>
       <view class="more-item">帮助中心</view>
+      <view class="more-item" @tap="changeSkin('skinBlue')">主题1</view>
+      <view class="more-item" @tap="changeSkin('skinOrange')">主题2</view>
     </view>
 </template>
 
 <script>
+import { mapMutations } from 'vuex'
+export default {
+  data() {
+    return {
+      skinBlue: [
+        { name: '--nav-bgc', value: 'skyblue' },
+        { name: '--text-color', value: '#fff' },
+        { name: '--linear-gradient', value: '-webkit-linear-gradient(top,#3975c5 2.56rem, #f8f8f8 4.64rem)' },
+      ],
+      skinOrange: [
+        { name: '--nav-bgc', value: '#f40' },
+        { name: '--text-color', value: '#000' },
+        { name: '--linear-gradient', value: 'none' },
+      ]
+    }
+  },
+  methods: {
+    ...mapMutations(['setTheme']),
+    changeSkin(i) {
+      this[i].forEach(item => {
+        document.body.style.setProperty(item.name, item.value)
+      })
+      // isDark ? this.setTheme(this.skinBlue) : this.setTheme(this.skinOrange)
+      uni.setStorageSync('theme', i)
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -97,4 +126,6 @@
       background-color: #f0f0f0;
     }
   }
+ 
+
 </style>

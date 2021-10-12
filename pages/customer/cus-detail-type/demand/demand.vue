@@ -50,43 +50,50 @@
               <view class="zb border"></view>
             </view>
           </view>
-          <view class="sell-info">
-            <view class="info-text-list">签单ID: 10561</view>
-            <view class="info-text-list">签单日期：09-01 10:47</view>
+          <view class="sell-info" v-if="item.sysSign != null">
+            <view class="info-text-list">签单编号: {{item.sysSign.signId}}</view>
+            <view class="info-text-list">签单日期：{{item.sysSign.signTime}}</view>
           </view>
         </view>
-        <view class="money-ul">
+        <view class="money-ul" v-if="item.sysSign != null">
           <view class="money-list">
-            <view class="money-text">1000000</view>
+            <view class="money-text">{{item.sysSign.contractMoney}}</view>
             <view class="money-tips">合同金额</view>
           </view>
           <view class="money-list">
-            <view class="money-text">500000</view>
+            <view class="money-text">{{item.sysSign.collectionMoney}}</view>
             <view class="money-tips">已收金额</view>
           </view>
           <view class="money-list">
-            <view class="money-text">500000</view>
+            <view class="money-text">{{item.sysSign.treatMoney}}</view>
             <view class="money-tips">待收金额</view>
           </view>
         </view>
         <view class="sale-btn-box">
           <view class="sale-btn-ul">
-            <view class="btn-list">收款</view>
-            <view class="btn-list">退款</view>
-            <view class="btn-list">服务单</view>
+            <view class="btn-list" @tap.stop="addTransact(0, item)" v-if="item.sysSign != null">+收款</view>
+            <view class="btn-list" @tap.stop="addTransact(1, item)" v-if="item.sysSign != null">+退款</view>
+            <view class="btn-list" @tap.stop="addSign(item)" v-if="item.sysSign == null">+签单</view>
+            <view class="btn-list" @tap.stop="addService(item)">+服务单</view>
             <view class="btn-list">服务群</view>
           </view>
         </view>
       </view>
-      <view v-if="demandList.length != 0">
+      <view v-if="loadAll" style="padding-top: 2rem;">
         <view class="van-list__finished-text">已显示全部数据</view>
         <view class="van-list__placeholder"></view>
       </view>
       <view class="no-data" v-if="demandList.length == 0">
         <image src="/static/no-chart.png"></image>
-        暂无跟进记录
+        暂无需求记录
       </view>
     </view>
+    <u-modal v-model="showAddKeyMessage" :content="content" :show-cancel-button="true"
+    confirm-text="补充地址" confirm-color="#1f9400" @confirm="supplementAddress"></u-modal>
+    
+    <u-modal v-model="showService" :content="content" :show-cancel-button="true"
+    confirm-text="补充地址" confirm-color="#1f9400" cancel-text="暂不补充" 
+    @confirm="supplementAddress" @cancel="supplementAddService"></u-modal>
   </view>
 </template>
 
@@ -101,24 +108,39 @@ export default {
   },
   data() {
     return {
-      demandList: [],
+      // demandList: [],
+      flag: false,
+      showAddKeyMessage: false,
+      content: '当前需求无客户地址信息，请先补充再签单！',
+      supplementDemandId: '',
+      showService: false
+    }
+  },
+  props: {
+    demandList: {
+      type: Array,
+      default: []
+    },
+    loadAll: {
+      type: Boolean,
+      default: false
     }
   },
   created() {
-    this.getDemandList()
+    // this.getDemandList()
   },
   methods: {
-    ...mapMutations(['setDemandId']),
-    getDemandList() {
-      let data = {
-        limit: 10,
-        page: 1,
-        customerId: this.cusId
-      }
-      this.$u.api.getCusDemand(data).then(res => {
-        this.demandList = res.records
-      })
-    },
+    ...mapMutations(['setDemandId', 'setLastPath']),
+    // getDemandList() {
+    //   let data = {
+    //     limit: 10,
+    //     page: 1,
+    //     customerId: this.cusId
+    //   }
+    //   this.$u.api.getCusDemand(data).then(res => {
+    //     this.demandList = res.records
+    //   })
+    // },
     addDemand() {
       uni.navigateTo({
         url: '/pages/customer/cus-detail-type/demand/addDemand/index'
@@ -128,6 +150,61 @@ export default {
       this.setDemandId(item.id)
       uni.navigateTo({
         url: '/pages/customer/cus-detail-type/demand/demand-detail/index'
+      })
+    },
+    addTransact(type, item) {
+      console.log(item)
+      this.setDemandId(item.id)
+      let routes =  getCurrentPages();
+      let currPage = routes[routes.length - 1].route
+      this.setLastPath(currPage)
+      uni.navigateTo({
+        url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/payment/addCollect?type=' + type
+      })
+    },
+    addService(item) {
+      if (item.keyId == null || item.keyMessage == null) {
+        this.showService = true
+        this.supplementDemandId = item.id
+      } else {
+        this.setDemandId(item.id)
+        let routes =  getCurrentPages();
+        let currPage = routes[routes.length - 1].route
+        this.setLastPath(currPage)
+        uni.navigateTo({
+          url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/service/addService'
+        })
+      }
+    },
+    addSign(item) {
+      if (item.keyId == null || item.keyMessage == null) {
+        this.showAddKeyMessage = true
+        this.supplementDemandId = item.id
+      } else {
+        this.setDemandId(item.id)
+        let routes =  getCurrentPages();
+        let currPage = routes[routes.length - 1].route
+        this.setLastPath(currPage)
+        uni.navigateTo({
+          url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/signing/addSign'
+        })
+      }
+    },
+    // 补充需求的keyMessage
+    supplementAddress() {
+      this.setDemandId(this.supplementDemandId)
+      uni.navigateTo({
+        url: '/pages/customer/cus-detail-type/demand/supplementKeyId/list'
+      })
+    },
+    // 不补充地址 添加服务单
+    supplementAddService () {
+      this.setDemandId(this.supplementDemandId)
+      let routes =  getCurrentPages();
+      let currPage = routes[routes.length - 1].route
+      this.setLastPath(currPage)
+      uni.navigateTo({
+        url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/service/addService'
       })
     }
   }

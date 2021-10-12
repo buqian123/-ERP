@@ -269,6 +269,12 @@
         enable: true
       }
     },
+    onLoad() {
+      this.$u.api.login({openId: '123', userId: '1'}).then(res => {
+        uni.setStorageSync('token', res.token)
+        this.$store.commit('setUserInfo', res)
+      })
+    },
     onShow() {
       this.enable = true
       

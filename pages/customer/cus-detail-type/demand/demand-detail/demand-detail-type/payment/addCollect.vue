@@ -98,13 +98,26 @@ export default {
     ...mapState({
       demandId: state => state.customer.demandId,
       cusId: state => state.customer.cusId,
-      uploadUrl: state => state.uploadUrl
+      uploadUrl: state => state.uploadUrl,
+      lastPath: state => state.lastPath
     })
   },
   onLoad(options) {
     if (options.type) {
       this.paymentForm.distinguish = options.type
       this.transact = options.type
+    }
+    
+    if (options.type == '0') {
+      uni.setNavigationBarTitle({
+          title: '新增收款'
+      });
+      this.getSettlementMethod('0')
+    } else {
+      uni.setNavigationBarTitle({
+          title: '新增退款'
+      });
+      this.getSettlementMethod('1')
     }
     this.getSignInfo()
   },
@@ -123,6 +136,7 @@ export default {
         second: true
       },
       paymentForm: {
+        customerId: '',
         demandId: '',
         distinguish: '',
         slowPeople: 'ZhengYu',
@@ -134,13 +148,7 @@ export default {
         imgUrl: []
       },
       slowTypeShow: false,
-      slowTypeList: [
-        {value: 0,label: '定金'},
-        {value: 0,label: '回款'},
-        {value: 0,label: '尾款'},
-        {value: 0,label: '全款'},
-        {value: 0,label: '其他'}
-      ],
+      slowTypeList: [],
       settlementMethodShow: false,
       settlementMethodText: '',
       settlementMethodList: [
@@ -161,6 +169,17 @@ export default {
     }
   },
   methods: {
+    getSettlementMethod(type) {
+      this.$u.api.getOptionList({type: type}).then(res => {
+        res.records.forEach(item => {
+          let obj = {
+            value: item.id,
+            label: item.typeName
+          }
+          this.slowTypeList.push(obj)
+        })
+      })
+    },
     getSignInfo() {
       this.$u.api.getSignList({id: this.demandId}).then(res => {
         // console.log(res);
@@ -189,6 +208,7 @@ export default {
       })
     },
     submit() {
+      this.paymentForm.customerId = this.cusId
       let payRule = {}
       if (this.paymentForm.distinguish == '0') {
         payRule['收款人'] = this.paymentForm.slowPeople
@@ -229,7 +249,12 @@ export default {
       this.paymentForm.demandId = this.demandId
       
       this.$u.api.addTransact(this.paymentForm).then(res => {
-        console.log(res);
+        uni.redirectTo({
+          url: '/' + this.lastPath
+        })
+        // uni.navigateBack({
+        //   delta: 1
+        // })
       })
     }
   }

@@ -25,15 +25,24 @@
       <view class="info-item-left">省市区：</view>
       <view class="info-item-right">{{cusInfo.address}}</view>
     </view>
-    <view class="line"></view>
-    <view class="info-header">关键信息</view>
-    <view class="imp-item">
-      <view class="info-item" v-for="item in cusInfo.keyMessages">
-        <view class="info-item-left">{{item.productName + '---'}}</view>
-        <view class="info-item-right">{{item.productType + '---'}}</view>
-        <view class="info-item-right">{{'地址:' + item.address}}</view>
+    <view v-for="item in cusInfo.keyMessages">
+      <view class="line"></view>
+      <view class="info-header">关键信息</view>
+      <view class="imp-item">
+        <view class="info-item" >
+          <view class="info-item-left">产品名称：</view>
+          <view class="info-item-right">{{item.productName}}</view>
+        </view>
+        <view class=info-item>
+          <view class="info-item-right">产品类型：</view>
+          <view class="info-item-right">{{item.productType}}</view>
+        </view>
+        <view class="info-item">
+          <view class="info-item-right">地址：</view>
+          <view class="info-item-right">{{item.address}}</view>
+        </view>
+        <view class="line" style="margin-top: 12px;"></view>
       </view>
-      <view class="line" style="margin-top: 12px;"></view>
     </view>
     <view class="info-header">其他信息</view>
     <view>
@@ -74,6 +83,7 @@ export default {
     // this.getCusInfo()
   },
   methods: {
+    ...mapMutations(['setLastPath']),
     getCusInfo() {
       // this.$u.api.selectCusInfo({id: this.cusId}).then(res => {
       //   this.cusInfo = res
@@ -81,7 +91,10 @@ export default {
       // })
     },
     goEditCus() {
-      uni.navigateTo({
+      let routes =  getCurrentPages();
+      let currPage = routes[routes.length - 1].route
+      this.setLastPath(currPage)
+      uni.redirectTo({
         url: '/pages/customer/editCus'
       })
     }

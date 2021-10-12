@@ -174,7 +174,8 @@ export default {
 		// 年份开始时间
 		startYear: {
 			type: [String, Number],
-			default: new Date().getFullYear()
+			// default: new Date().getFullYear()
+			default: 1950
 		},
 		// 年份结束时间
 		endYear: {

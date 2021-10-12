@@ -28,24 +28,25 @@
       <view class="price-follow-container">
         <view class="price">
           <text class="price-top">签单合同总金额</text>
-          <text>￥{{cusInfo.contractMoney || '没钱'}}</text>
+          <text>￥{{cusInfo.contractMoney || '0'}}</text>
         </view>
         <view class="price">
           <text class="price-top">实际收款金额</text>
-          <text>￥{{cusInfo.collectionMoney || '没钱'}}</text>
+          <text>￥{{cusInfo.collectionMoney || '0'}}</text>
         </view>
         <view class="price">
-          <text class="price-top">跟进人(1)</text>
-          <text>{{cusInfo.followUpPerson || '没人'}}</text>
+          <text class="price-top" v-if="cusInfo.followUpPerson">跟进人{{'(' + cusInfo.followUpPerson.split(',').length + ')'}}</text>
+          <text class="price-top" v-else>跟进人(0)</text>
+          <text>{{cusInfo.followUpPerson || '暂无跟进人'}}</text>
         </view>
       </view>
     </view>
     <view class="tabs flex-bet">
-      <view class="tab-item" :class="{'tabs-active': tabIndex == 0}" @tap="tabIndex = 0">雷达</view>
-      <view class="tab-item" :class="{'tabs-active': tabIndex == 1}" @tap="tabIndex = 1">跟进</view>
-      <view class="tab-item" :class="{'tabs-active': tabIndex == 2}" @tap="tabIndex = 2">需求</view>
-      <view class="tab-item" :class="{'tabs-active': tabIndex == 3}" @tap="tabIndex = 3">收款</view>
-      <view class="tab-item" :class="{'tabs-active': tabIndex == 4}" @tap="tabIndex = 4">服务</view>
+      <view class="tab-item" :class="{'tabs-active': tabIndex == 0}" @tap="changeTabIndex(0)">雷达</view>
+      <view class="tab-item" :class="{'tabs-active': tabIndex == 1}" @tap="changeTabIndex(1)">跟进</view>
+      <view class="tab-item" :class="{'tabs-active': tabIndex == 2}" @tap="changeTabIndex(2)">需求</view>
+      <view class="tab-item" :class="{'tabs-active': tabIndex == 3}" @tap="changeTabIndex(3)">收款</view>
+      <view class="tab-item" :class="{'tabs-active': tabIndex == 4}" @tap="changeTabIndex(4)">服务</view>
     </view>
     <!-- 联系 -->
     <view class="wx-phone">
@@ -59,14 +60,33 @@
       </view>
     </view>
     
-    <Radar v-if="tabIndex == 0"></Radar>
+    <u-modal v-model="showDelCustomer" content="删除后无法查找到该用户哦" title="确认删除" :show-cancel-button="true"
+    confirm-text="确认" cancel-text="取消" @confirm="delCus"></u-modal>
+    
+    
+<!--    <Radar v-if="tabIndex == 0"></Radar>
     <block v-if="cusInfo.id">
       <Follow v-if="tabIndex == 1"></Follow>
     </block>
     
     <Demand v-if="tabIndex == 2"></Demand>
     <Payment v-if="tabIndex == 3"></Payment>
-    <Service v-if="tabIndex == 4"></Service>
+    <Service v-if="tabIndex == 4"></Service> -->
+    <block v-if="tabShow0">
+      <Radar v-show="tabIndex == 0"></Radar>
+    </block>
+    <block v-if="tabShow1">
+      <Follow v-show="tabIndex == 1" :loglist="followList" :loadAll="followAll"></Follow>
+    </block>
+   <block v-if="tabShow2">
+     <Demand v-show="tabIndex == 2" :demandList="demandList" :loadAll="demandAll"></Demand>
+   </block>
+   <block v-if="tabShow3">
+     <Payment v-show="tabIndex == 3" :collectList="paylist" :loadAll="paymentAll"></Payment>
+   </block>
+   <block v-if="tabShow4">
+     <Service v-show="tabIndex == 4" :serviceList="serviceList" :loadAll="serviceAll"></Service>
+   </block>
   </view>
 </template>
 
@@ -99,35 +119,249 @@ export default {
           text: '删除客户'
         }
       ],
-      cusInfo: {}
+      cusInfo: {},
+      tabShow0: false,
+      tabShow1: false,
+      tabShow2: false,
+      tabShow3: false,
+      tabShow4: false,
+      showDelCustomer: false,
+      // 跟进
+      followList: [],
+      followPage: 1,
+      followAll: false,
+      // 需求
+      demandList: [],
+      demandPage: 1,
+      demandAll: false,
+      // 收付款数据
+      paylist: [],
+      paymentOffset: 0,
+      paymentAll: false,
+      // 服务单数据
+      serviceList: [],
+      serviceOffset: 0,
+      serviceAll: false,
     }
   },
-  onShow() {
+  onLoad() {
+    if (this.cusDetailTabIndex) {
+      this.tabIndex = this.cusDetailTabIndex
+      this['tabShow' + this.tabIndex] = true
+    }
     this.getCusInfo()
+    switch(this.tabIndex) {
+      case 0:
+        break;
+      case 1:
+        this.getFollowList()
+        break;
+      case 2:
+        this.getDemandList()
+        break;
+      case 3:
+        this.getPaymentList()
+        break;
+      case 4:
+        this.getServiceList()
+        break;
+      default: return false
+    }
   },
   computed: {
     ...mapState({
-      cusId: state => state.customer.cusId
+      cusId: state => state.customer.cusId,
+      cusDetailTabIndex: state => state.customer.cusDetailTabIndex,
+      lastPath: state => state.lastPath
     })
   },
+  onPullDownRefresh() {
+    // this.pageIndex = 1;
+    
+    // // 重置 loadAll 状态
+    // this.loadAll = false;
+    
+    // // 清空当前数据
+    // this.listData = [];
+    
+    // // 查询列表数据
+    // this.queryListData();
+    
+    // // 停止下拉刷新
+    // uni.stopPullDownRefresh();
+  },
+  onReachBottom() {
+    switch(this.tabIndex) {
+      case 0:
+        break;
+      case 1:
+        if (!this.followAll) {
+          this.getFollowList()
+        }
+        break;
+      case 2:
+        if (!this.demandAll) {
+          this.getDemandList()
+        }
+        break;
+      case 3:
+        if (!this.paymentAll) {
+          this.getPaymentList()
+        }
+        break;
+      case 4:
+        if (!this.serviceAll) {
+          this.getServiceList()
+        }
+        break;
+      default: return false
+    }
+  },
   methods: {
-    ...mapMutations(['setCusInfo']),
+    ...mapMutations(['setCusInfo', 'setTabIndex', 'setLastPath']),
+    getFollowList() {
+      let data = {
+        customerId: this.cusId,
+        type: 'FOLLOW',
+        limit: 5,
+        page: this.followPage
+      }
+      this.$u.api.getAllLog(data).then(res => {
+        let arr = res.records.filter(item => {
+          return item.openLogs.length != 0
+        }) 
+        
+        arr.forEach(item => {
+          this.followList.push(item)
+        })
+        
+        this.followPage += 1
+        if (res.pages != 0) {
+          if (this.followPage > res.pages) {
+            this.followAll = true
+          }
+        }
+      })
+    },
+    getDemandList() {
+      let data = {
+        limit: 5,
+        page: this.demandPage,
+        customerId: this.cusId
+      }
+      this.$u.api.getCusDemand(data).then(res => {
+        res.records.forEach(item => {
+          this.demandList.push(item)
+        })
+        this.demandPage += 1
+        if (res.pages != 0) {
+          if (this.demandPage > res.pages) {
+            this.demandAll = true
+          }
+        }
+      })
+    },
+    getPaymentList() {
+      let data = {
+        limit: 5,
+        offset: this.paymentOffset, 
+        customerId: this.cusId,
+      }
+      this.$u.api.getCollect(data).then(res => {
+        res.data.forEach(item => {
+          this.paylist.push(item)
+        })
+        this.paymentOffset += 5
+        if (res.total != 0) {
+          if (this.paymentOffset > res.total) {
+            this.paymentAll = true
+          }
+        }
+      })
+    },
+    getServiceList() {
+      let data = {
+        customerId: this.cusId,
+        limit: 5,
+        offset: this.serviceOffset
+      }
+      this.$u.api.getService(data).then(res => {
+        res.data.forEach(item => {
+          this.serviceList.push(item)
+        })
+        this.serviceOffset += 5
+        if (res.total != 0) {
+          if (this.serviceOffset >= res.total) {
+            this.serviceAll = true
+          }
+        }
+      })
+    },
+    changeTabIndex(i) {
+      switch(i) {
+        case 0:
+          break;
+        case 1:
+          if (!this['tabShow' + i]) {
+            this.getFollowList()
+          }
+          break;
+        case 2:
+          if (!this['tabShow' + i]) {
+            this.getDemandList()
+          }
+          break;
+        case 3:
+          if (!this['tabShow' + i]) {
+            this.getPaymentList()
+          }
+          break;
+        case 4:
+          if (!this['tabShow' + i]) {
+            this.getServiceList()
+          }
+          break;
+        default: return false
+      }
+      
+      this.tabIndex = i
+      this.setTabIndex({type: 'cusDetailTabIndex', value: i})
+      this['tabShow' + i] = true
+    },
     getCusInfo() {
       this.$u.api.selectCusInfo({id: this.cusId}).then(res => {
         this.cusInfo = res
         this.setCusInfo(res)
+        this['tabShow' + this.tabIndex] = true
       })
     },
     selectAction(index) {
-
+      if (index == 0) {
+        uni.navigateTo({
+          url: '/pages/customer/handleLog'
+        })
+      }
+      if (index == 2) {
+        this.showDelCustomer = true
+      }
+    },
+    delCus() {
+      this.$u.api.delCustomer({id: this.cusId}).then(res => {
+        uni.redirectTo({
+          url: '/pages/customer/index'
+        })
+      })
     },
     goCusInfo() {
       uni.navigateTo({
         url: '/pages/customer/cusInfo'
       })
     },
-    goEditCus(id) {
-      uni.navigateTo({
+    goEditCus() {
+      let routes =  getCurrentPages();
+      let currPage = routes[routes.length - 1].route
+      this.setLastPath(currPage)
+      uni.redirectTo({
         url: '/pages/customer/editCus'
       })
     }

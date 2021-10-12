@@ -8,15 +8,15 @@
             需求品牌
           </view>
           <view class="input-right" @tap="$refs.demandTypeRef.open()">
-            <view class="input-text">实例(请去Pc端修改)</view>
+            <view class="input-text" :class="{'input-text-cur': !addForm.demandType}">{{addForm.demandType || '请选择'}}</view>
             <image src="/static/arrow-right-img.png" class="right-icon"></image>
           </view>
         </view>
         
         <uni-drawer ref="demandTypeRef" mode="right" :mask-click="true" :width="320">
           <view class="drawer-title">需求品牌</view>
-          <view class="type-popup-list" @click="selectDemandType">
-            <view class="type-popup-item">实例(请去Pc端修改)</view>
+          <view class="type-popup-list">
+            <view class="type-popup-item" v-for="item in demandTypeList" :key="item.id" @tap="selectDemandType(item)">{{item.label}}</view>
             <view class="end-list">已显示全部数据</view>
           </view>
         </uni-drawer>
@@ -28,7 +28,7 @@
             需求类型
           </view>
           <view class="input-right" @tap="$refs.demandNameRef.open()">
-            <view class="input-text">{{addForm.demandName}}</view>
+            <view class="input-text" :class="{'input-text-cur': !addForm.demandType}">{{addForm.demandName || '请选择'}}</view>
             <image src="/static/arrow-right-img.png" class="right-icon"></image>
           </view>
         </view>
@@ -41,22 +41,25 @@
           </view>
         </uni-drawer>
         
-        
-        
-        <view class="input-list">
-          <view class="input-title" style="padding-left: .213333rem;">客户关键信息</view>
-          <view class="input-right" @tap="selectkeyMsg">
-            <view class="input-text">
-              <view>{{keyInfo}}</view>
+        <view class="cus-important-info">
+          <view class="cus-important-info-left">客户关键信息</view>
+          <view class="cus-important-info-right" @tap="selectkeyMsg">
+            <view class="cus-important-info-right-desc">
+              <view style="color: #999;" v-if="!addForm.keyId">请选择</view>
+              <view class="cus-important-info-right-desc-item">{{keyInfo}}</view>
+              <view class="cus-important-info-right-desc-item">{{address}}</view>
             </view>
             <image src="/static/arrow-right-img.png" class="right-icon"></image>
           </view>
         </view>
         
+        
+        
+        
         <view class="input-list">
           <view class="input-title" style="padding-left: .213333rem;">关联介绍人</view>
           <view class="input-right" @tap="chooseIntroductor">
-            <view class="input-text input-text-cur">请选择</view>
+            <view class="input-text" :class="{'input-text-cur': introducerText.length == 0}">{{introducerText || '请选择'}}</view>
             <image src="/static/arrow-right-img.png" class="right-icon"></image>
           </view>
         </view>
@@ -111,7 +114,7 @@
         <view class="input-list">
           <view class="input-title" style="padding-left: .213333rem;">需求跟进人</view>
           <view class="input-right">
-            <view class="input-text">ZhengYu</view>
+            <view class="input-text">{{userInfo.userName}}</view>
           </view>
         </view>
         <view class="input-list">
@@ -180,6 +183,7 @@
         <view class="btn-list flex-cen" @tap="addSubmit">提交</view>
       </view>
     </u-form>
+    <u-toast ref="uToast" />
   </view>
 </template>
 
@@ -190,17 +194,18 @@ export default {
   components: { duNav },
   computed: {
     ...mapState({
-      cusId: state => state.customer.cusId
+      cusId: state => state.customer.cusId,
+      userInfo: state => state.userInfo
     })
   },
   data() {
     return {
       addForm: {
         relationId: '', // 关联客户id
-        demandType: '产品', // 需求品牌
-        demandName: '零售', // 需求类型
+        demandType: '', // 需求品牌
+        demandName: '', // 需求类型
         keyId: '', // 关键信息Id
-        introducerId: '', // 关联介绍人Id
+        introducerId: [], // 关联介绍人Id
         competitor: '', // 竞争对手
         opponentRemarks: '', // 竞争对手描述
         predictMoney	: '', // 预估金额
@@ -210,14 +215,11 @@ export default {
         demandSharePeople: '' // 需求共享人
         
       },
+      demandTypeList: [],
       moreForm: false,
-      demandNameList: [
-        {value: 0,label: '零售'},
-        {value: 1,label: '工程'},
-        {value: 2,label: '整装'},
-        {value: 3,label: '分销'}
-      ],
+      demandNameList: [],
       keyInfo: '', // 关键信息
+      address: '',
       introducer: '', // 关联介绍人
       checkAll: false,
       litterTitleList: [
@@ -230,22 +232,47 @@ export default {
         {name: '💰方案报价：'},
         {name: '💗特别关心：'}
       ],
-      remarkFocus: false
+      remarkFocus: false,
+      introducerText: ''
     }
   },
   onLoad() {
+    this.getOptions('2')
+    this.getOptions('3')
     this.addForm.relationId = this.cusId
     uni.$on("keyInfo", (data) => {
       this.addForm.keyId = data.keyId
-      this.keyInfo = data.productName + '/' + data.productType + '\n' + data.address
+      this.keyInfo = `${data.productName}/${data.productType}`
+      this.address = data.address
+    });
+    uni.$on("introducer", (data) => {
+      this.addForm.introducerId = data.id
+      this.introducerText = data.introducerName
     });
   },
   onUnload() {
     uni.$off("keyInfo")
+    uni.$off("introducer")
   },
   methods: {
+    getOptions(type) {
+      this.$u.api.getOptionList({type: type}).then(res => {
+        res.records.forEach(item => {
+          let obj = {
+            value: item.id,
+            label: item.typeName
+          }
+          if (type == '2') {
+            this.demandNameList.push(obj)
+          }else {
+            this.demandTypeList.push(obj)
+          }
+        })
+      })
+    },
     // 选择需求品牌
-    selectDemandType() {
+    selectDemandType(item) {
+      this.addForm.demandType = item.label
       this.$refs.demandTypeRef.close()
     },
     selectDemandName(item) {
@@ -273,19 +300,51 @@ export default {
       }
     },
     addSubmit() {
-      console.log(this.addForm);
+      let rule = {
+        '需求品牌': this.addForm.demandType,
+        '需求类型': this.addForm.demandName
+      }
+      
+      if (this.moreForm) {
+        rule['备注'] = this.addForm.remarks
+      }
+      
+      for (let i in rule) {
+        if (rule[i] === '') {
+          this.$refs.uToast.show({
+            title: `请输入${i}`,
+            type: 'info'
+          })
+          return
+        }
+      }   
+      
+      this.addForm = this.filterObj(this.$u.deepClone(this.addForm))
+      
       this.$u.api.addDemand(this.addForm).then(res => {
-        console.log(res);
-        // uni.redirectTo({
-        //   url: '/pages/customer/cusDetail'
-        // })
+        uni.redirectTo({
+          url: '/pages/customer/cusDetail'
+        })
       })
     },
     cancel() {
       uni.redirectTo({
         url: '/pages/customer/cusDetail'
       })
-    }
+    },
+    // 过滤属性值为空的对象属性
+    filterObj(obj) {
+      let _newPar = {};
+      for (let key in obj) {
+          //如果对象属性的值不为空，就保存该属性（这里我做了限制，如果属性的值为0，保存该属性。如果属性的值全部是空格，属于为空。）
+          if ((obj[key] == 0 || obj[key]) && obj[key].toString().replace(/(^\s*)|(\s*$)/g, '') !== '') {
+              //记录属性
+              _newPar[key] = obj[key];
+          }
+      }
+      //返回对象
+      return _newPar;
+    },
   }
 }
 </script>
@@ -550,6 +609,38 @@ page {
     
   }
   
+}
+.cus-important-info {
+  display: flex;
+  align-items: flex-start;
+  padding: .266667rem;
+  background-color: #fff;
+  position: relative;
+  .cus-important-info-left {
+    line-height: 1.066667rem;
+    font-weight: 700;
+    font-size: .426667rem;
+    margin-left: .206667rem;
+    margin-right: .373333rem;
+    color: #262626;
+  }
+  .cus-important-info-right {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .cus-important-info-right-desc {
+      font-size: .4rem;
+      line-height: .56rem;
+      margin-top: .266667rem;
+      margin-bottom: .24rem;
+    }
+    .right-icon {
+      width: 12px;
+      height: 12px;
+    }
+  }
 }
 .dep-footer {
   position: fixed;

@@ -1,13 +1,13 @@
 <template>
   <view class="signing">
-    <view class="follow-btn-ul" v-if="!signInfo.signPeople">
+    <view class="follow-btn-ul" v-if="signInfo == null">
       <view class="follow-btn-item" @tap="addSign">
         <text class="add-follow-text">新增签单</text>
         <image src="/static/add-follow.png" class="add-follow-icon"></image>
       </view>
     </view>
     <view class="line-ver-gradint"></view>
-    <view class="list-box">
+    <view class="list-box" v-if="signInfo != null">
       <view class="header">签单</view>
       <view class="desc">签单人：{{signInfo.signPeople}}</view>
       <view class="desc">签单日期：{{signInfo.signTime}}</view>
@@ -31,11 +31,18 @@
         修改
       </view>
     </view>
+    <view class="no-data" v-if="signInfo == null">
+      <image src="/static/no-chart.png"></image>
+      暂无签单记录
+    </view>
+    
+    <u-modal v-model="showAddKeyMessage" :content="content" :show-cancel-button="true"
+    confirm-text="补充地址" confirm-color="#1f9400" @confirm="supplementAddress"></u-modal>
   </view>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 export default {
   computed: {
     ...mapState({
@@ -44,24 +51,57 @@ export default {
   },
   data() {
     return {
-      signInfo: {}
+      // signInfo: {},
+      // demandInfo: {},
+      showAddKeyMessage: false,
+      content: '当前需求无客户地址信息，请先补充再签单！'
     }
   },
   created() {
-    this.getSignInfo()
+    // this.getSignInfo()
+    // this.$u.api.getDemandInfoById({id: this.demandId}).then(res => {
+    //   this.demandInfo = res
+    // })
+  },
+  props: {
+    signInfo: {
+      type: Object,
+      default: {}
+    },
+    demandInfo: {
+      type: Object,
+      default: {}
+    },
   },
   methods: {
-    getSignInfo() {
-      this.$u.api.getSignList({demandId: this.demandId}).then(res => {
-        this.signInfo = res
-      })
-    },
+    ...mapMutations(['setLastPath']),
+    // getSignInfo() {
+    //   this.$u.api.getSignList({demandId: this.demandId}).then(res => {
+    //     this.signInfo = res
+    //   })
+    // },
     addSign() {
+      if (this.demandInfo.keyId == null || this.demandInfo.keyMessage.address == null) {
+        this.showAddKeyMessage = true
+      } else {
+        let routes =  getCurrentPages();
+        let currPage = routes[routes.length - 1].route
+        this.setLastPath(currPage)
+        uni.navigateTo({
+          url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/signing/addSign'
+        })
+      }
+    },
+    // 补充需求的keyMessage
+    supplementAddress() {
       uni.navigateTo({
-        url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/signing/addSign'
+        url: '/pages/customer/cus-detail-type/demand/supplementKeyId/list'
       })
     },
     editSign() {
+      let routes =  getCurrentPages();
+      let currPage = routes[routes.length - 1].route
+      this.setLastPath(currPage)
       uni.navigateTo({
         url: '/pages/customer/cus-detail-type/demand/demand-detail/demand-detail-type/signing/editSign?id=' + this.signInfo.signId
       })
@@ -71,6 +111,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  [v-cloak] { 
+  display:none;
+  }
   .signing {
     padding: 0px 11px;
 

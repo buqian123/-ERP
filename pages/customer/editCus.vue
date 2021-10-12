@@ -220,7 +220,8 @@ import { mapState, mapMutations } from 'vuex'
 export default {
   computed: {
     ...mapState({
-      cusInfo: state => state.customer.cusInfo
+      cusInfo: state => state.customer.cusInfo,
+      lastPath: state => state.lastPath
     })
   },
   data() {
@@ -344,21 +345,9 @@ export default {
       item.defaultIndex[0] = data[0].value
     },
     cancel() {
-      const pages = getCurrentPages();
-      console.log(pages);
-      if (pages.length === 2) {
-        uni.navigateBack({
-          delta: 1
-        });
-      } else if (pages.length === 1) {
-        uni.reLaunch({
-          url: '/pages/customer/index'
-        })
-      } else {
-        uni.navigateBack({
-          delta: 1
-        });
-      }
+      uni.redirectTo({
+        url: '/' + this.lastPath
+      })
     },
     // 提交
     addCustomer() {
@@ -383,8 +372,8 @@ export default {
             this.$u.api.editCustomer(this.formData).then(res => {
               this.$u.api.selectCusInfo({id: this.cusInfo.id}).then(res => {
                 this.setCusInfo(res)
-                uni.navigateBack({
-                  delta: 1
+                uni.redirectTo({
+                  url: '/' + this.lastPath
                 })
               })
             })
@@ -394,8 +383,8 @@ export default {
         this.$u.api.editCustomer(this.formData).then(res => {
           this.$u.api.selectCusInfo({id: this.cusInfo.id}).then(res => {
             this.setCusInfo(res)
-            uni.navigateBack({
-              delta: 1
+            uni.redirectTo({
+              url: '/' + this.lastPath
             })
           })
         })

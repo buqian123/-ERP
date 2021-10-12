@@ -49,7 +49,8 @@ export default {
   computed: {
     ...mapState({
       demandId: state => state.customer.demandId,
-      cusId: state => state.customer.cusId
+      cusId: state => state.customer.cusId,
+      lastPath: state => state.lastPath
     })
   },
   onLoad(options) {
@@ -66,6 +67,7 @@ export default {
         signTime: '',
         contractMoney: '', // 合同总金额
         activity: '123' , // 关联活动Id
+        oldContractMoney: ''
       },
       moreFill: false,
       searchSignPeople: '',
@@ -87,7 +89,8 @@ export default {
         Object.keys(this.addSignForm).forEach(key=>{
           this.addSignForm[key]=res[key]
         })
-        console.log(this.addSignForm);
+        this.addSignForm.oldContractMoney = res.contractMoney
+        // console.log(this.addSignForm);
         // this.addSignForm = res
       })
     },
@@ -123,9 +126,11 @@ export default {
         })
         return
       }
-      console.log(this.addSignForm );
+      console.log(this.addSignForm);
       this.$u.api.editSign(this.addSignForm).then(res => {
-        console.log(res);
+        uni.redirectTo({
+          url: '/' + this.lastPath
+        })
       })
     }
   }

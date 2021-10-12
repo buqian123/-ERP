@@ -1,9 +1,31 @@
+import md5Libs from "uview-ui/libs/function/md5"
+
+/**
+ * 签名请求
+ * @param request
+ */
+const signRequest = request => {
+  // 签名验证
+  if (request.params == undefined) {
+    request.params = {}
+  }
+  let timestamp = new Date().getTime()
+  request.params.timestamp = '' + timestamp
+    
+  // md5Libs.md5('uView')
+    
+  let sign = signMd5Utils.getSign(request.url, request)
+  request.params.sign = sign
+}
+
+
+
 // 这里的vm，就是我们在vue文件里面的this，所以我们能在这里获取vuex的变量，比如存放在里面的token
 // 同时，我们也可以在此使用getApp().globalData，如果你把token放在getApp().globalData的话，也是可以使用的
 const install = (Vue, vm) => {
   Vue.prototype.$u.http.setConfig({
-    // baseUrl: 'http://192.168.1.14:6745/api',
-    baseUrl: 'http://9.andragon.cn/api',
+    baseUrl: 'http://192.168.1.10:6745/api',
+    // baseUrl: 'http://9.andragon.cn/api',
     // baseUrl: 'http://along.vaiwan.com/api',
     loadingText: '努力加载中~',
     loadingTime: 800,
@@ -32,18 +54,35 @@ const install = (Vue, vm) => {
     const token = uni.getStorageSync('token');
     config.header.Authorization = token;
 		
+    // signRequest(config)
+    
     return config; 
   }
   // 响应拦截，判断状态码是否通过
   Vue.prototype.$u.http.interceptor.response = (res) => {
     // 如果把originalData设置为了true，这里得到将会是服务器返回的所有的原始数据
     // 判断可能变成了res.statueCode，或者res.data.code之类的，请打印查看结果
-    if(res.code == 200) {
-      // 如果把originalData设置为了true，这里return回什么，this.$u.post的then回调中就会得到什么
-      return res.data;  
-    } else return false;
+    if (res.code) {
+      if(res.code == 200) {
+        // 如果把originalData设置为了true，这里return回什么，this.$u.post的then回调中就会得到什么
+        return res.data;  
+      } else {
+        uni.showToast({
+          title: res,
+          duration: 2000,
+          success: () => {
+            uni.hideToast();
+          }
+        });
+        
+        return false
+      }
+    } else {
+      return res
+    }
   }
 }
+
 
 export default {
   install

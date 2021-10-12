@@ -1,38 +1,34 @@
 <script>
-  import { mapState, mapMutations } from 'vuex'
 	export default {
-    computed: {
-      ...mapState({
-        cusId: state => state.customer.cusId,
-        demandId: state => state.customer.demandId,
-      })
-    },
 		onLaunch: function() {
-      
-			// console.log('App Launch')
-      
-      // this.$u.api.login({openId: '123'}).then(res => {
-      //   uni.setStorageSync('token', res)
-      // })
-      // uni.request({
-      //   url: 'http://along.vaiwan.com/api/login',
-      //   method: 'POST',
-      //   data: {
-      //     userId: '1',
-      //     openId: '123'
-      //   },
-      //   success: res => {
-      //     console.log(res);
-      //     uni.setStorageSync('token', res.data)
-      //   }
-      // })
-      
+      const skinBlue = [
+        { name: '--nav-bgc', value: 'skyblue' },
+        { name: '--text-color', value: '#fff' }
+      ]
+      const skinOrange = [
+        { name: '--nav-bgc', value: '#f40' },
+        { name: '--text-color', value: '#000' }
+      ]
+      let theme = uni.getStorageSync('theme')
+      switch(theme) {
+        case 'skinBlue':
+          skinBlue.forEach(item => {
+            document.body.style.setProperty(item.name, item.value)
+          })
+          break;
+        case 'skinOrange':
+          skinOrange.forEach(item => {
+            document.body.style.setProperty(item.name, item.value)
+          })
+          break;
+        default: return false;
+      }
 		},
 		onShow: function() {
-			// console.log('App Show')
+      
 		},
 		onHide: function() {
-			// console.log('App Hide')
+      
 		},
     created() {
       //在页面加载时读取sessionStorage里的状态信息
@@ -76,10 +72,12 @@
    width: 100%;
    padding: .266667rem 0.24074rem 0;
    min-height: calc(100vh - 1.33333rem);
+   // background-color: var(--nav-bgc);
    background-color: #f8f8f8;
-   background-image: linear-gradient(top,#3975c5 2.56rem, #f8f8f8 4.64rem);
-   background-image: -moz-linear-gradient(top,#3975c5 2.56rem, #f8f8f8 4.64rem);
+   // background-image: linear-gradient(top,#3975c5 2.56rem, #f8f8f8 4.64rem);
+   // background-image: -moz-linear-gradient(top,#3975c5 2.56rem, #f8f8f8 4.64rem);
    background-image: -webkit-linear-gradient(top,#3975c5 2.56rem, #f8f8f8 4.64rem);
+   // background-image: var(--linear-gradient);
   }
 
   .chartBox {
@@ -308,4 +306,105 @@
       height: 2rem;
     }
   }
+  .voiceTool {
+    width: 100%;
+    position: relative;
+    
+    .btn {
+      width: 100%;
+      height: 1.173333rem;
+      box-sizing: border-box;
+      border: .013333rem solid #ccc;
+      border-radius: .053333rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      image {
+        width: .346667rem;
+        height: .346667rem;
+        margin-right: .133333rem;
+      }
+      text {
+        font-size: .373333rem;
+        color: #262626;
+      }
+    }
+    .wave {
+      width: 4.933333rem;
+      height: 2.373333rem;
+      background-color: #e9f2ff;
+      border-radius: .16rem;
+      position: absolute;
+      top: -2.666667rem;
+      left: calc(50% - 2.46667rem);
+      z-index: auto;
+      .inner {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        .music {
+          width: .933333rem;
+          height: .533333rem;
+          position: relative;
+          margin-bottom: .213333rem;
+          
+          @keyframes bodong
+          {
+            from {height:.133333rem;}
+            to {height: .5rem;}
+          }
+          
+          text {
+            width: .133333rem;
+            height: .133333rem;
+            bottom: 0;
+            position: absolute;
+            background: #3975c5;
+            animation: bodong .5s ease 0s infinite alternate;
+          }
+          .s1 {
+            left: 0;
+            animation-delay: .3s;
+          }
+          .s2 {
+            left: .186667rem;
+            animation-delay: .4s;
+          }
+          .s3 {
+            left: .373333rem;
+            animation-delay: .6s;
+          }
+          .s4 {
+            left: .56rem;
+            animation-delay: .8s;
+          }
+          .s5 {
+            left: .746667rem;
+            animation-delay: 1s;
+          }
+        }
+        .text {
+          font-size: .32rem;
+          color: #3975c5;
+        }
+        .shape {
+          width: 0;
+          height: 0;
+          border-left: .213333rem solid transparent;
+          border-right: .213333rem solid transparent;
+          border-top: .16rem solid #e9f2ff;
+          position: absolute;
+          bottom: -.16rem;
+          left: 2.253333rem;
+          z-index: auto;
+        }
+      }
+    }
+  }
+  
 </style>

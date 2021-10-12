@@ -4,7 +4,7 @@
     <view class="base-info">
       <view class="base-info-title">
         <text>基本信息</text>
-        <view class="edit-btn">
+        <view class="edit-btn" @tap="editDemand">
           <view class="text">编辑</view>
           <view class="border"></view>
         </view>
@@ -26,11 +26,11 @@
         </view>
       </view>
       <view class="base-info-item">
-        <view class="item-title">客户关键信息</view>
+        <view class="item-title" style="align-self: flex-start;">客户关键信息</view>
         <view class="desc" v-if="demandInfo.keyMessage">
-          <view>{{demandInfo.keyMessage.productName}}</view>
-          <view>{{demandInfo.keyMessage.productType}}</view>
-          <view>{{demandInfo.keyMessage.address}}</view>
+          <view>产品名称：{{demandInfo.keyMessage.productName}}</view>
+          <view>产品类型：{{demandInfo.keyMessage.productType}}</view>
+          <view>地址：{{demandInfo.keyMessage.address}}</view>
         </view>
       </view>
       <view class="base-info-item">
@@ -40,6 +40,10 @@
       <view class="base-info-item">
         <view class="item-title">竞争对手</view>
         <view class="desc">{{demandInfo.competitor}}</view>
+      </view>
+      <view class="base-info-item">
+        <view class="item-title">竞争对手描述</view>
+        <view class="desc">{{demandInfo.opponentRemarks}}</view>
       </view>
       <view class="base-info-item">
         <view class="item-title">预估金额</view>
@@ -55,12 +59,12 @@
           <view class="desc">{{demandInfo.demandFollowPeople}}</view>
         </view>
         <view class="base-info-item">
-          <view class="item-title">{{demandInfo.demandPushPeople}}</view>
-          <view class="desc"></view>
+          <view class="item-title">需求内推人</view>
+          <view class="desc">{{demandInfo.demandPushPeople}}</view>
         </view>
         <view class="base-info-item">
-          <view class="item-title">{{demandInfo.demandSharePeople}}</view>
-          <view class="desc"></view>
+          <view class="item-title">需求共享人</view>
+          <view class="desc">{{demandInfo.demandSharePeople}}</view>
         </view>
       </view>
       <view class="base-info-item flex-bet" @tap="showMore">
@@ -105,19 +109,38 @@
     
     <!-- tabs -->
     <view class="sale-tabs">
-      <view class="sale-tabs-item" :class="{cur: saleTab == 0}" @tap="saleTab = 0">雷达</view>
-      <view class="sale-tabs-item" :class="{cur: saleTab == 1}" @tap="saleTab = 1">跟进</view>
-      <view class="sale-tabs-item" :class="{cur: saleTab == 2}" @tap="saleTab = 2">签单</view>
-      <view class="sale-tabs-item" :class="{cur: saleTab == 3}" @tap="saleTab = 3">收款</view>
-      <view class="sale-tabs-item" :class="{cur: saleTab == 4}" @tap="saleTab = 4">服务</view>
+      <view class="sale-tabs-item" :class="{cur: saleTab == 0}" @tap="changeSaleTab(0)">雷达</view>
+      <view class="sale-tabs-item" :class="{cur: saleTab == 1}" @tap="changeSaleTab(1)">跟进</view>
+      <view ref="sign" class="sale-tabs-item" :class="{cur: saleTab == 2}" @tap="changeSaleTab(2)">签单</view>
+      <view class="sale-tabs-item" :class="{cur: saleTab == 3}" @tap="changeSaleTab(3)">收款</view>
+      <view class="sale-tabs-item" :class="{cur: saleTab == 4}" @tap="changeSaleTab(4)">服务</view>
     </view>
     
-    <radar v-if="saleTab == 0"></radar>
+    <u-modal v-model="showDelDemand" content="您确定删除此需求吗" title="确认删除吗？" :show-cancel-button="true"
+    confirm-text="确认" cancel-text="取消" @confirm="delDemand"></u-modal>
+    
+    
+<!--    <radar v-if="saleTab == 0"></radar>
     <follow v-if="saleTab == 1"></follow>
     <signing v-if="saleTab == 2"></signing>
     <payment v-if="saleTab == 3"></payment>
-    <serivce v-if="saleTab == 4"></serivce>
-
+    <serivce v-if="saleTab == 4"></serivce> -->
+    
+    <block v-if="saleTab0">
+      <radar v-show="saleTab == 0"></radar>
+    </block>
+    <block v-if="saleTab1">
+      <follow v-show="saleTab == 1" :followList="followList" :loadAll="followAll"></follow>
+    </block>
+    <block v-if="saleTab2">
+      <signing v-show="saleTab == 2" :signInfo="signInfo" :demandInfo="demandInfo"></signing>
+    </block>
+    <block v-if="saleTab3">
+      <payment v-show="saleTab == 3" :paymentList="paylist" :loadAll="paymentAll"></payment>
+    </block>
+    <block v-if="saleTab4">
+      <serivce v-show="saleTab == 4" :serviceList="serviceList" :loadAll="serviceAll" :demandInfo="demandInfo"></serivce>
+    </block>
   </view>
 </template>
 
@@ -139,7 +162,8 @@ export default {
   computed: {
     ...mapState({
       cusId: state => state.customer.cusId,
-      demandId: state => state.customer.demandId
+      demandId: state => state.customer.demandId,
+      demandTabIndex: state => state.customer.demandTabIndex
     })
   },
   data() {
@@ -175,14 +199,185 @@ export default {
       moreActionList: [
         { text: '操作日志' }, { text: '转交需求' }, { text: '删除需求' }
       ],
-      saleTab: 2,
-      load: false
+      saleTab: 1,
+      load: false,
+      showDelDemand: false,
+      saleTab0: false,
+      saleTab1: false,
+      saleTab2: false,
+      saleTab3: false,
+      saleTab4: false,
+      // 跟进
+      followList: [],
+      followPage: 1,
+      followAll: false,
+      // 签单
+      signInfo: {},
+      signAll: false,
+      // 收付款数据
+      paylist: [],
+      paymentOffset: 0,
+      paymentAll: false,
+      // 服务单数据
+      serviceList: [],
+      serviceOffset: 0,
+      serviceAll: false
     }
   },
   onLoad() {
     this.getDemandInfo()
+    if (this.demandTabIndex) {
+      this.saleTab = this.demandTabIndex
+      this['saleTab' + this.saleTab] = true
+    }
+    switch(this.saleTab) {
+      case 0:
+        break;
+      case 1:
+        this.getFollowList()
+        break;
+      case 2:
+        this.getSignInfo()
+        break;
+      case 3:
+        this.getPaymentList()
+        break;
+      case 4:
+        this.getServiceList()
+        break;
+      default: return false
+    }
+  },
+  onPullDownRefresh() {
+    
+  },
+  onReachBottom() {
+    switch(this.saleTab) {
+      case 0:
+        break;
+      case 1:
+        if (!this.followAll) {
+          this.getFollowList()
+        }
+        break;
+      case 2:
+        if (!this.signAll) {
+          this.getSignInfo()
+        }
+        break;
+      case 3:
+        if (!this.paymentAll) {
+          this.getPaymentList()
+        }
+        break;
+      case 4:
+        if (!this.serviceAll) {
+          this.getServiceList()
+        }
+        break;
+      default: return false
+    }
   },
   methods: {
+    ...mapMutations(['setTabIndex']),
+    getFollowList() {
+      let data = {
+        fromId: this.demandId,
+        type: 'FOLLOW',
+        limit: 5,
+        page: this.followPage
+      }
+      this.$u.api.getAllLog(data).then(res => {
+        let arr = res.records.filter(item => {
+          return item.openLogs.length != 0
+        }) 
+        
+        arr.forEach(item => {
+          this.followList.push(item)
+        })
+        
+        this.followPage += 1
+        if (res.pages != 0) {
+          if (this.followPage > res.pages) {
+            this.followAll = true
+          }
+        }
+      })
+    },
+    getSignInfo() {
+      this.$u.api.getSignList({demandId: this.demandId}).then(res => {
+        this.signInfo = res
+        this.signAll = true
+      })
+    },
+    getPaymentList() {
+      let data = {
+        limit: 5, 
+        offset: this.paymentOffset, 
+        demandId: this.demandId
+      }
+      this.$u.api.getCollect(data).then(res => {
+        res.data.forEach(item => {
+          this.paylist.push(item)
+        })
+        this.paymentOffset += 5
+        
+        if (res.total != 0) {
+          if (this.paymentOffset > res.total) {
+            this.paymentAll = true
+          }
+        }
+        
+      })
+    },
+    getServiceList() {
+      let data = {
+        demandId: this.demandId,
+        limit: 5,
+        offset: this.serviceOffset
+      }
+      this.$u.api.getService(data).then(res => {
+        res.data.forEach(item => {
+          this.serviceList.push(item)
+        })
+        this.serviceOffset += 5
+        if (res.total != 0) {
+          if (this.serviceOffset > res.total) {
+            this.serviceAll = true
+          }
+        }
+        
+      })
+    },
+    changeSaleTab(i) {
+      switch(i) {
+        case 0:
+          break;
+        case 1:
+          if (!this['saleTab' + i]) {
+            this.getFollowList()
+          }
+          break;
+        case 2:
+          this.getSignInfo()
+          break;
+        case 3:
+          if (!this['saleTab' + i]) {
+            this.getPaymentList()
+          }
+          break;
+        case 4:
+          if (!this['saleTab' + i]) {
+            this.getServiceList()
+          }
+          break;
+        default: return false
+      }
+      
+      this.saleTab = i
+      this.setTabIndex({type: 'demandTabIndex', value: i})
+      this['saleTab' + i] = true
+    },
     async getDemandInfo() {
       await this.$u.api.getDemandInfoById({id: this.demandId}).then(res => {
         this.demandInfo = res
@@ -198,10 +393,24 @@ export default {
       this.moretype = !this.moretype
     },
     selectAction(index) {
-      console.log(index);
+      if (index == 2) {
+        this.showDelDemand = true
+      }
+    },
+    delDemand() {
+      this.$u.api.delDemand({id: this.demandId}).then(res => {
+        uni.redirectTo({
+          url: '/pages/customer/cusDetail'
+        })
+      })
     },
     confirm(e) {
       console.log(e);
+    },
+    editDemand() {
+      uni.navigateTo({
+        url: '/pages/customer/cus-detail-type/demand/demand-detail/editDemand'
+      })
     }
   }
 }
@@ -214,7 +423,6 @@ export default {
   flex-direction: column;
   background-color: #f8f8f8;
   box-sizing: border-box;
-  overflow-y: auto;
 }
 
 .base-info {
@@ -292,7 +500,7 @@ export default {
       }
 
       .cus {
-        max-width: 2rem;
+        max-width: 5rem;
         margin-right: .106667rem;
         overflow: hidden;
         text-overflow: ellipsis;

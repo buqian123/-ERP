@@ -11,10 +11,10 @@ App.mpType = 'app';
 
 
 if (/(Android)/i.test(navigator.userAgent)) {
-  Vue.prototype.sdk=jWeixin
+  Vue.prototype.sdk = 'jWeixin'
 }
 if (/(iPhone|iPad|iPod|ios)/i.test(navigator.userAgent)) {
-  Vue.prototype.sdk=wx
+  Vue.prototype.sdk = 'wx'
 }
 
 
